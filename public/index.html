@@ -1,0 +1,788 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Cult.Sport | Simple & Premium Activewear for Men & Kids</title>
+  
+  <!-- Google Fonts: Inter -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
+  
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['"Inter"', 'sans-serif'],
+          },
+          colors: {
+            cult: {
+              black: '#111111',
+              orange: '#ff5238',
+              gray: '#f7f7f8',
+              border: '#eeeeee'
+            }
+          }
+        }
+      }
+    }
+  </script>
+
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <!-- Razorpay Checkout SDK -->
+  <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+  <link rel="stylesheet" href="/css/style.css" />
+</head>
+<body class="bg-white text-slate-900 min-h-screen flex flex-col antialiased">
+
+  <!-- 1. Minimal Top Announcement Bar -->
+  <div class="cult-announcement">
+    <span>FREE SHIPPING ON ORDERS ABOVE ₹799 | EASY SIZE EXCHANGES | COD AVAILABLE</span>
+  </div>
+
+  <!-- 2. Clean White Minimalist Header (Cultstore Style) -->
+  <header class="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-slate-100 shadow-sm">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex items-center justify-between h-14 sm:h-16 gap-3">
+        
+        <!-- Brand Logo -->
+        <a href="/" class="flex items-center gap-1.5 flex-shrink-0">
+          <div class="w-7 h-7 bg-black text-white rounded flex items-center justify-center font-black text-xs">
+            <span class="text-rose-500">c</span><span>s</span>
+          </div>
+          <div class="flex items-center tracking-tight leading-none text-lg sm:text-xl font-black text-black">
+            <span>cult</span><span class="text-rose-500">.sport</span>
+          </div>
+        </a>
+
+        <!-- Desktop Minimal Category Links -->
+        <nav class="hidden md:flex items-center gap-6">
+          <button onclick="filterByGroup('all')" class="nav-cult-link active text-xs font-bold text-black uppercase tracking-wider transition-colors" data-group="all">
+            All Sports
+          </button>
+          <button onclick="filterByGroup('men')" class="nav-cult-link text-xs font-semibold text-slate-500 hover:text-black uppercase tracking-wider transition-colors" data-group="men">
+            Men
+          </button>
+          <button onclick="filterByGroup('kids')" class="nav-cult-link text-xs font-semibold text-slate-500 hover:text-black uppercase tracking-wider transition-colors" data-group="kids">
+            Kids
+          </button>
+          <button onclick="filterSpecial('bestseller')" class="nav-cult-link text-xs font-semibold text-rose-500 hover:text-rose-600 uppercase tracking-wider transition-colors flex items-center gap-1" data-group="bestseller">
+            <span>Bestsellers</span>
+            <span class="w-1.5 h-1.5 rounded-full bg-rose-500"></span>
+          </button>
+        </nav>
+
+        <!-- Right Side: Clean Search, Track & Bag -->
+        <div class="flex items-center gap-3">
+          <!-- Clean Search Input -->
+          <div class="relative w-36 sm:w-56 lg:w-64">
+            <input
+              type="text"
+              id="search-input"
+              placeholder="Search activewear..."
+              class="w-full bg-slate-100 text-slate-900 text-xs pl-8 pr-3 py-1.5 sm:py-2 rounded-full border border-transparent focus:border-slate-300 focus:bg-white focus:outline-none transition-all"
+            />
+            <i data-lucide="search" class="w-3.5 h-3.5 text-slate-400 absolute left-2.5 top-1/2 -translate-y-1/2"></i>
+          </div>
+
+          <!-- Track (Desktop) -->
+          <button onclick="openTrackModal()" class="hidden sm:flex items-center gap-1 text-xs font-medium text-slate-600 hover:text-black px-2 py-1">
+            <i data-lucide="truck" class="w-3.5 h-3.5"></i>
+            <span>Track</span>
+          </button>
+
+          <!-- Shopping Bag Button -->
+          <button onclick="openCartDrawer()" class="relative p-2 text-black hover:bg-slate-100 rounded-full transition-colors" aria-label="Bag">
+            <i data-lucide="shopping-bag" class="w-5 h-5"></i>
+            <span id="cart-badge" class="absolute -top-0.5 -right-0.5 bg-rose-500 text-white text-[9px] font-bold w-4 h-4 rounded-full flex items-center justify-center scale-0 transition-transform">
+              0
+            </span>
+          </button>
+        </div>
+
+      </div>
+    </div>
+  </header>
+
+  <!-- 3. Cultstore Auto-Sliding Hero Carousel (Touch Swipe + Auto-Rotate + Indicators) -->
+  <section class="hero-carousel-container relative select-none">
+    <!-- Slider Track -->
+    <div id="hero-slider-track" class="hero-slider-track">
+      
+      <!-- Slide 1: Men's Training / FlyDry -->
+      <div class="hero-slide relative bg-gradient-to-r from-black via-slate-900 to-transparent">
+        <img src="https://images.unsplash.com/photo-1517838277536-f5f99be501cd?auto=format&fit=crop&w=1600&q=80" alt="Men's Training Activewear" class="hero-slide-bg" />
+        <div class="absolute inset-0 bg-gradient-to-r from-black/90 via-black/60 to-transparent z-[1]"></div>
+        <div class="hero-slide-content">
+          <div class="max-w-xl space-y-3.5">
+            <span class="inline-flex items-center gap-1.5 text-[11px] font-black uppercase tracking-widest text-white bg-rose-500 px-3 py-1 rounded-full shadow-sm">
+              <i data-lucide="zap" class="w-3.5 h-3.5"></i>
+              FLYDRY™ PERFORMANCE
+            </span>
+            <h1 class="text-3xl sm:text-5xl font-black text-white tracking-tight leading-tight uppercase">
+              Engineered to Outperform. Men's Activewear.
+            </h1>
+            <p class="text-xs sm:text-sm text-slate-300 font-normal leading-relaxed">
+              Sweat-wicking, 4-way stretch gym tees & running shorts engineered for high-intensity reps and endurance training.
+            </p>
+            <div class="pt-2 flex items-center gap-3">
+              <button onclick="filterByGroup('men'); scrollToProducts();" class="px-6 py-3 bg-white hover:bg-slate-100 text-black text-xs font-black rounded-lg transition-all flex items-center gap-2 shadow-lg">
+                <span>Shop Men's Gear</span>
+                <i data-lucide="arrow-right" class="w-4 h-4"></i>
+              </button>
+              <button onclick="filterBySubcategory('men-gym-tees'); scrollToProducts();" class="px-5 py-3 bg-white/15 hover:bg-white/25 text-white text-xs font-bold rounded-lg border border-white/30 backdrop-blur-sm transition-all">
+                Gym T-Shirts
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Slide 2: Kids' Sports & Football Kits -->
+      <div class="hero-slide relative bg-gradient-to-r from-black via-slate-900 to-transparent">
+        <img src="https://images.unsplash.com/photo-1526676037777-05a232554f77?auto=format&fit=crop&w=1600&q=80" alt="Kids Sports & Football" class="hero-slide-bg" />
+        <div class="absolute inset-0 bg-gradient-to-r from-black/90 via-black/60 to-transparent z-[1]"></div>
+        <div class="hero-slide-content">
+          <div class="max-w-xl space-y-3.5">
+            <span class="inline-flex items-center gap-1.5 text-[11px] font-black uppercase tracking-widest text-white bg-sky-500 px-3 py-1 rounded-full shadow-sm">
+              <i data-lucide="trophy" class="w-3.5 h-3.5"></i>
+              JUNIOR ATHLETICS 2026
+            </span>
+            <h2 class="text-3xl sm:text-5xl font-black text-white tracking-tight leading-tight uppercase">
+              Born to Play. Kids' Sports &amp; Football Kits.
+            </h2>
+            <p class="text-xs sm:text-sm text-slate-300 font-normal leading-relaxed">
+              Breathable, tear-resistant football jerseys, school PE wear & tracksuits built for non-stop action on the ground.
+            </p>
+            <div class="pt-2 flex items-center gap-3">
+              <button onclick="filterByGroup('kids'); scrollToProducts();" class="px-6 py-3 bg-sky-500 hover:bg-sky-400 text-white text-xs font-black rounded-lg transition-all flex items-center gap-2 shadow-lg">
+                <span>Shop Kids' Sports</span>
+                <i data-lucide="arrow-right" class="w-4 h-4"></i>
+              </button>
+              <button onclick="filterBySubcategory('kids-sports-jerseys'); scrollToProducts();" class="px-5 py-3 bg-white/15 hover:bg-white/25 text-white text-xs font-bold rounded-lg border border-white/30 backdrop-blur-sm transition-all">
+                Football Sets
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Slide 3: 4-Way Stretch Trackpants & Joggers -->
+      <div class="hero-slide relative bg-gradient-to-r from-black via-slate-900 to-transparent">
+        <img src="https://images.unsplash.com/photo-1552674605-db6ffd4facb5?auto=format&fit=crop&w=1600&q=80" alt="Athletic Track Pants" class="hero-slide-bg" />
+        <div class="absolute inset-0 bg-gradient-to-r from-black/90 via-black/60 to-transparent z-[1]"></div>
+        <div class="hero-slide-content">
+          <div class="max-w-xl space-y-3.5">
+            <span class="inline-flex items-center gap-1.5 text-[11px] font-black uppercase tracking-widest text-white bg-amber-500 px-3 py-1 rounded-full shadow-sm">
+              <i data-lucide="activity" class="w-3.5 h-3.5"></i>
+              FLEX-FIT TECH
+            </span>
+            <h2 class="text-3xl sm:text-5xl font-black text-white tracking-tight leading-tight uppercase">
+              Ultra-Flex Joggers &amp; Track Pants.
+            </h2>
+            <p class="text-xs sm:text-sm text-slate-300 font-normal leading-relaxed">
+              From intense sprint intervals to cool-down recovery. Anti-chafing seams and zip pockets for zero distraction.
+            </p>
+            <div class="pt-2 flex items-center gap-3">
+              <button onclick="filterBySubcategory('men-track-pants'); scrollToProducts();" class="px-6 py-3 bg-white hover:bg-slate-100 text-black text-xs font-black rounded-lg transition-all flex items-center gap-2 shadow-lg">
+                <span>Explore Joggers</span>
+                <i data-lucide="arrow-right" class="w-4 h-4"></i>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Slide 4: Mega Activewear Sale (Cultstore Special) -->
+      <div class="hero-slide relative bg-gradient-to-r from-black via-slate-900 to-transparent">
+        <img src="https://images.unsplash.com/photo-1534438327276-14e5300c3a48?auto=format&fit=crop&w=1600&q=80" alt="Activewear Sale" class="hero-slide-bg" />
+        <div class="absolute inset-0 bg-gradient-to-r from-black/90 via-black/60 to-transparent z-[1]"></div>
+        <div class="hero-slide-content">
+          <div class="max-w-xl space-y-3.5">
+            <span class="inline-flex items-center gap-1.5 text-[11px] font-black uppercase tracking-widest text-white bg-rose-600 px-3 py-1 rounded-full shadow-sm">
+              <i data-lucide="flame" class="w-3.5 h-3.5"></i>
+              SEASON FINALE SALE
+            </span>
+            <h2 class="text-3xl sm:text-5xl font-black text-white tracking-tight leading-tight uppercase">
+              Flat 50% Off Activewear + Extra 10% on UPI.
+            </h2>
+            <p class="text-xs sm:text-sm text-slate-300 font-normal leading-relaxed">
+              Upgrade your workout and play gear with genuine performance wear. Free shipping on orders over ₹799!
+            </p>
+            <div class="pt-2 flex items-center gap-3">
+              <button onclick="filterByGroup('all'); scrollToProducts();" class="px-6 py-3 bg-rose-500 hover:bg-rose-600 text-white text-xs font-black rounded-lg transition-all flex items-center gap-2 shadow-lg">
+                <span>Shop All Deals</span>
+                <i data-lucide="arrow-right" class="w-4 h-4"></i>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Navigation Arrows -->
+    <button onclick="prevHeroSlide()" aria-label="Previous Slide" class="hero-nav-arrow prev">
+      <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 19l-7-7 7-7"/></svg>
+    </button>
+    <button onclick="nextHeroSlide()" aria-label="Next Slide" class="hero-nav-arrow next">
+      <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7"/></svg>
+    </button>
+
+    <!-- Pagination Dots -->
+    <div id="hero-dots" class="hero-dots-wrapper">
+      <button onclick="setHeroSlide(0)" class="hero-dot-btn active" aria-label="Slide 1"></button>
+      <button onclick="setHeroSlide(1)" class="hero-dot-btn" aria-label="Slide 2"></button>
+      <button onclick="setHeroSlide(2)" class="hero-dot-btn" aria-label="Slide 3"></button>
+      <button onclick="setHeroSlide(3)" class="hero-dot-btn" aria-label="Slide 4"></button>
+    </div>
+  </section>
+
+  <!-- 4. Signature Category Stories Strip (Clean White Circles) -->
+  <section class="bg-white border-b border-slate-100 py-3.5">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div id="category-stories" class="flex items-center gap-4 sm:gap-6 overflow-x-auto pb-1 scrollbar-none">
+        
+        <!-- All -->
+        <div onclick="filterByGroup('all')" class="story-circle-item active" id="story-all">
+          <div class="story-circle-wrapper flex items-center justify-center font-bold text-xs text-black">
+            All
+          </div>
+          <span class="story-circle-title">All Sports</span>
+        </div>
+
+        <!-- Gym Tees -->
+        <div onclick="filterBySubcategory('men-gym-tees')" class="story-circle-item" id="story-men-gym-tees">
+          <div class="story-circle-wrapper">
+            <img src="https://images.unsplash.com/photo-1581009146145-b5ef050c2e1e?auto=format&fit=crop&w=150&q=80" class="story-circle-img" />
+          </div>
+          <span class="story-circle-title">T-Shirts</span>
+        </div>
+
+        <!-- Trackpants -->
+        <div onclick="filterBySubcategory('men-track-pants')" class="story-circle-item" id="story-men-track-pants">
+          <div class="story-circle-wrapper">
+            <img src="https://images.unsplash.com/photo-1552674605-db6ffd4facb5?auto=format&fit=crop&w=150&q=80" class="story-circle-img" />
+          </div>
+          <span class="story-circle-title">Joggers</span>
+        </div>
+
+        <!-- Shorts -->
+        <div onclick="filterBySubcategory('men-running-shorts')" class="story-circle-item" id="story-men-running-shorts">
+          <div class="story-circle-wrapper">
+            <img src="https://images.unsplash.com/photo-1591291621164-2c6367723315?auto=format&fit=crop&w=150&q=80" class="story-circle-img" />
+          </div>
+          <span class="story-circle-title">Shorts</span>
+        </div>
+
+        <!-- Kids Football -->
+        <div onclick="filterBySubcategory('kids-sports-jerseys')" class="story-circle-item" id="story-kids-sports-jerseys">
+          <div class="story-circle-wrapper">
+            <img src="https://images.unsplash.com/photo-1560272564-c83b66b1ad12?auto=format&fit=crop&w=150&q=80" class="story-circle-img" />
+          </div>
+          <span class="story-circle-title">Kids Kits</span>
+        </div>
+
+        <!-- Kids Tracksuits -->
+        <div onclick="filterBySubcategory('kids-tracksuits')" class="story-circle-item" id="story-kids-tracksuits">
+          <div class="story-circle-wrapper">
+            <img src="https://images.unsplash.com/photo-1524863479829-916d8e77f114?auto=format&fit=crop&w=150&q=80" class="story-circle-img" />
+          </div>
+          <span class="story-circle-title">Tracksuits</span>
+        </div>
+
+        <!-- School PE -->
+        <div onclick="filterBySubcategory('kids-pe-wear')" class="story-circle-item" id="story-kids-pe-wear">
+          <div class="story-circle-wrapper">
+            <img src="https://images.unsplash.com/photo-1508215885820-4523e431397b?auto=format&fit=crop&w=150&q=80" class="story-circle-img" />
+          </div>
+          <span class="story-circle-title">School PE</span>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- 5. Cultstore Horizontal Sliding Rail: Trending in Men's Sports -->
+  <section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 pb-3">
+    <div class="flex items-center justify-between pb-3 border-b border-slate-100">
+      <div>
+        <div class="flex items-center gap-2">
+          <span class="text-rose-500 font-black text-base">🔥</span>
+          <h2 class="text-base sm:text-lg font-black text-slate-900 tracking-tight">
+            Trending in Men's Sports
+          </h2>
+        </div>
+        <p class="text-xs text-slate-500">Dri-FIT tees, lightweight joggers &amp; running shorts</p>
+      </div>
+
+      <div class="flex items-center gap-2">
+        <button onclick="filterByGroup('men'); scrollToProducts();" class="text-xs font-bold text-slate-900 hover:text-rose-500 transition-colors hidden sm:inline-block mr-2">
+          View All Men &rarr;
+        </button>
+        <button onclick="scrollRail('trending-men-slider', -1)" aria-label="Previous Men Products" class="rail-arrow-btn">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 19l-7-7 7-7"/></svg>
+        </button>
+        <button onclick="scrollRail('trending-men-slider', 1)" aria-label="Next Men Products" class="rail-arrow-btn">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7"/></svg>
+        </button>
+      </div>
+    </div>
+
+    <!-- Men Sliding Rail Track -->
+    <div class="rail-slider-container pt-4">
+      <div id="trending-men-slider" class="product-rail-track">
+        <!-- Injected via JavaScript -->
+      </div>
+    </div>
+  </section>
+
+  <!-- 6. Cultstore Horizontal Sliding Rail: Popular in Kids' Sports -->
+  <section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+    <div class="flex items-center justify-between pb-3 border-b border-slate-100">
+      <div>
+        <div class="flex items-center gap-2">
+          <span class="text-sky-500 font-black text-base">⚽</span>
+          <h2 class="text-base sm:text-lg font-black text-slate-900 tracking-tight">
+            Popular in Kids' Sports
+          </h2>
+        </div>
+        <p class="text-xs text-slate-500">Football sets, active tracksuits &amp; school PE wear</p>
+      </div>
+
+      <div class="flex items-center gap-2">
+        <button onclick="filterByGroup('kids'); scrollToProducts();" class="text-xs font-bold text-slate-900 hover:text-rose-500 transition-colors hidden sm:inline-block mr-2">
+          View All Kids &rarr;
+        </button>
+        <button onclick="scrollRail('popular-kids-slider', -1)" aria-label="Previous Kids Products" class="rail-arrow-btn">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 19l-7-7 7-7"/></svg>
+        </button>
+        <button onclick="scrollRail('popular-kids-slider', 1)" aria-label="Next Kids Products" class="rail-arrow-btn">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7"/></svg>
+        </button>
+      </div>
+    </div>
+
+    <!-- Kids Sliding Rail Track -->
+    <div class="rail-slider-container pt-4">
+      <div id="popular-kids-slider" class="product-rail-track">
+        <!-- Injected via JavaScript -->
+      </div>
+    </div>
+  </section>
+
+  <!-- 5. Main Catalog Grid (Clean Cultstore Layout) -->
+  <main id="catalog-section" class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 flex-1">
+    
+    <!-- Filter Controls Bar -->
+    <div class="flex items-center justify-between gap-3 pb-4 mb-4 border-b border-slate-100">
+      <div>
+        <h2 id="catalog-title" class="text-base sm:text-lg font-bold text-slate-900">
+          All Sports Activewear
+        </h2>
+        <p id="catalog-subtitle" class="text-xs text-slate-500">Showing 12 items</p>
+      </div>
+
+      <!-- Controls: Group buttons & Sort -->
+      <div class="flex items-center gap-2">
+        <div class="inline-flex bg-slate-100 p-0.5 rounded-lg text-xs font-semibold">
+          <button onclick="filterByGroup('all')" class="cult-tab px-3 py-1 rounded transition-all active bg-white text-black shadow-xs" data-tab="all">
+            All
+          </button>
+          <button onclick="filterByGroup('men')" class="cult-tab px-3 py-1 rounded transition-all text-slate-500 hover:text-black" data-tab="men">
+            Men
+          </button>
+          <button onclick="filterByGroup('kids')" class="cult-tab px-3 py-1 rounded transition-all text-slate-500 hover:text-black" data-tab="kids">
+            Kids
+          </button>
+        </div>
+
+        <select id="size-filter" onchange="handleFilterChange()" class="bg-white text-slate-800 text-xs px-2 py-1 rounded-lg border border-slate-200 font-medium focus:outline-none">
+          <option value="">Size</option>
+          <option value="M">M</option>
+          <option value="L">L</option>
+          <option value="XL">XL</option>
+          <option value="XXL">XXL</option>
+          <option value="4-5 Years">4-5Y</option>
+          <option value="6-7 Years">6-7Y</option>
+          <option value="8-9 Years">8-9Y</option>
+        </select>
+
+        <select id="sort-filter" onchange="handleFilterChange()" class="bg-white text-slate-800 text-xs px-2 py-1 rounded-lg border border-slate-200 font-medium focus:outline-none">
+          <option value="newest">Newest</option>
+          <option value="price-low">Price: Low to High</option>
+          <option value="price-high">Price: High to Low</option>
+          <option value="bestseller">Popular</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- Active Filters Reset Strip -->
+    <div id="filter-status-bar" class="hidden items-center justify-between bg-slate-50 border border-slate-200 rounded-lg px-3.5 py-1.5 mb-4 text-xs text-slate-700 font-medium">
+      <span id="filter-status-text">Filters applied</span>
+      <button onclick="resetFilters()" class="text-rose-600 hover:underline font-semibold">
+        Clear All
+      </button>
+    </div>
+
+    <!-- Clean Product Cards Grid -->
+    <div id="products-grid" class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4">
+      <!-- Dynamically injected via app.js -->
+    </div>
+
+    <!-- Empty State -->
+    <div id="empty-state" class="hidden text-center py-12">
+      <p class="text-xs text-slate-500 mb-2">No activewear items found.</p>
+      <button onclick="resetFilters()" class="px-4 py-1.5 bg-black text-white text-xs font-semibold rounded-lg">
+        View All Items
+      </button>
+    </div>
+
+  </main>
+
+  <!-- 6. Clean Tech Trust Strip (Minimal White) -->
+  <section class="bg-slate-50 border-t border-slate-100 py-6 text-xs text-slate-600">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
+        <div class="flex flex-col items-center gap-1">
+          <span class="text-base">💧</span>
+          <span class="font-bold text-slate-900 text-xs">FlyDry™ Moisture Wicking</span>
+          <span class="text-[11px] text-slate-500">Quick-dry athletic fabric</span>
+        </div>
+        <div class="flex flex-col items-center gap-1">
+          <span class="text-base">⚡</span>
+          <span class="font-bold text-slate-900 text-xs">4-Way Stretch Flex</span>
+          <span class="text-[11px] text-slate-500">Unrestricted workouts</span>
+        </div>
+        <div class="flex flex-col items-center gap-1">
+          <span class="text-base">💬</span>
+          <span class="font-bold text-slate-900 text-xs">1-Click WhatsApp Buy</span>
+          <span class="text-[11px] text-slate-500">Fast direct order support</span>
+        </div>
+        <div class="flex flex-col items-center gap-1">
+          <span class="text-base">💵</span>
+          <span class="font-bold text-slate-900 text-xs">Cash on Delivery</span>
+          <span class="text-[11px] text-slate-500">Pay at doorstep</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 7. Minimal Clean White/Light-Grey Footer -->
+  <footer class="bg-white text-slate-500 text-xs py-6 border-t border-slate-100">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-3">
+      <div class="flex items-center gap-2">
+        <span class="font-bold text-slate-900">cult.sport</span>
+        <span>• Men &amp; Kids Activewear</span>
+      </div>
+      <div class="flex items-center gap-4 text-slate-500 font-medium">
+        <button onclick="filterByGroup('men')" class="hover:text-black">Men</button>
+        <button onclick="filterByGroup('kids')" class="hover:text-black">Kids</button>
+        <button onclick="openTrackModal()" class="hover:text-black">Track Order</button>
+        <a href="/admin" class="hover:text-black flex items-center gap-1">
+          <i data-lucide="lock" class="w-3 h-3"></i> Admin
+        </a>
+      </div>
+    </div>
+  </footer>
+
+  <!-- 8. Clean Mobile Bottom Bar (Cultstore App Style) -->
+  <nav class="cult-bottom-nav md:hidden">
+    <button onclick="filterByGroup('all'); scrollToProducts();" class="cult-bottom-item active" id="bnav-home">
+      <i data-lucide="home" class="w-4 h-4"></i>
+      <span>Home</span>
+    </button>
+    <button onclick="filterByGroup('men'); scrollToProducts();" class="cult-bottom-item" id="bnav-men">
+      <i data-lucide="user" class="w-4 h-4"></i>
+      <span>Men</span>
+    </button>
+    <button onclick="filterByGroup('kids'); scrollToProducts();" class="cult-bottom-item" id="bnav-kids">
+      <i data-lucide="smile" class="w-4 h-4"></i>
+      <span>Kids</span>
+    </button>
+    <button onclick="openCartDrawer()" class="cult-bottom-item relative" id="bnav-cart">
+      <i data-lucide="shopping-bag" class="w-4 h-4"></i>
+      <span>Bag</span>
+      <span id="mobile-bottom-cart-badge" class="absolute top-1.5 right-4 bg-rose-500 text-white text-[8px] font-bold w-3.5 h-3.5 rounded-full flex items-center justify-center scale-0 transition-transform">
+        0
+      </span>
+    </button>
+    <button onclick="openTrackModal()" class="cult-bottom-item" id="bnav-track">
+      <i data-lucide="truck" class="w-4 h-4"></i>
+      <span>Track</span>
+    </button>
+  </nav>
+
+  <!-- ==================== MODALS & DRAWERS ==================== -->
+
+  <!-- Product Detail Modal -->
+  <div id="product-modal" class="fixed inset-0 z-50 hidden flex items-center justify-center p-3 sm:p-4">
+    <div class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm" onclick="closeProductModal()"></div>
+    
+    <div class="relative bg-white rounded-2xl shadow-xl max-w-xl w-full max-h-[90vh] overflow-y-auto z-10 p-4 sm:p-6 border border-slate-100">
+      <button onclick="closeProductModal()" class="absolute top-3 right-3 text-slate-400 hover:text-slate-700 p-1">
+        <i data-lucide="x" class="w-4 h-4"></i>
+      </button>
+
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div class="rounded-xl overflow-hidden bg-slate-50 relative aspect-[4/5]">
+          <img id="modal-img" src="" alt="Cult Sport" class="w-full h-full object-cover" />
+          <span id="modal-badge" class="badge-discount-cult absolute top-2.5 left-2.5">50% OFF</span>
+        </div>
+
+        <div class="flex flex-col justify-between space-y-3">
+          <div class="space-y-1.5">
+            <span id="modal-category" class="text-[9px] font-bold uppercase tracking-wider text-rose-500">
+              CULT.SPORT
+            </span>
+            <h3 id="modal-title" class="text-sm sm:text-base font-bold text-slate-900 leading-snug">
+              Product Title
+            </h3>
+
+            <!-- Price -->
+            <div class="flex items-baseline gap-2 pt-1">
+              <span id="modal-price" class="text-lg font-black text-slate-900">₹499</span>
+              <span id="modal-original-price" class="text-xs text-slate-400 line-through">₹999</span>
+              <span id="modal-discount" class="text-[10px] font-bold text-rose-500">(50% OFF)</span>
+            </div>
+
+            <!-- Description -->
+            <p id="modal-desc" class="text-xs text-slate-500 leading-relaxed pt-1">
+              Lightweight, breathable 4-way stretch active fabric.
+            </p>
+
+            <!-- Size Selector -->
+            <div class="pt-2">
+              <span class="block text-xs font-bold text-slate-800 mb-1">Select Size:</span>
+              <div id="modal-sizes-container" class="flex flex-wrap gap-1.5">
+                <!-- Sizes injected via JS -->
+              </div>
+            </div>
+
+            <!-- Colors -->
+            <div id="modal-colors-wrapper" class="pt-1">
+              <span class="block text-xs font-bold text-slate-800 mb-1">Colors:</span>
+              <div id="modal-colors-container" class="flex flex-wrap gap-1.5"></div>
+            </div>
+          </div>
+
+          <!-- Actions -->
+          <div class="space-y-2 pt-2 border-t border-slate-100">
+            <button id="modal-add-cart-btn" onclick="addCurrentProductToCart()" class="w-full py-2.5 bg-black hover:bg-slate-800 text-white rounded-lg font-bold text-xs flex items-center justify-center gap-2">
+              <i data-lucide="shopping-bag" class="w-4 h-4"></i>
+              <span>Add to Bag</span>
+            </button>
+            <button onclick="instantWhatsAppBuy()" class="w-full py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg font-bold text-xs flex items-center justify-center gap-2">
+              <i data-lucide="message-circle" class="w-4 h-4"></i>
+              <span>Buy via WhatsApp</span>
+            </button>
+          </div>
+
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Cart Slide-out Drawer -->
+  <div id="cart-drawer-backdrop" class="fixed inset-0 z-50 hidden bg-slate-900/40 backdrop-blur-sm" onclick="closeCartDrawer()"></div>
+  <div id="cart-drawer" class="fixed top-0 right-0 bottom-0 z-50 w-full max-w-sm bg-white shadow-xl transform translate-x-full transition-transform duration-300 flex flex-col">
+    
+    <div class="p-3.5 border-b border-slate-100 flex items-center justify-between">
+      <div class="flex items-center gap-2">
+        <i data-lucide="shopping-bag" class="w-4 h-4 text-black"></i>
+        <h3 class="font-bold text-sm text-black">Shopping Bag</h3>
+        <span id="drawer-item-count" class="text-xs text-slate-500 font-medium">(0)</span>
+      </div>
+      <button onclick="closeCartDrawer()" class="p-1 text-slate-400 hover:text-black">
+        <i data-lucide="x" class="w-4 h-4"></i>
+      </button>
+    </div>
+
+    <!-- Free Delivery Notice -->
+    <div class="p-2 bg-slate-50 border-b border-slate-100 text-center text-xs text-slate-600">
+      <span id="free-delivery-msg">Free Shipping on orders above ₹799!</span>
+    </div>
+
+    <!-- Items List -->
+    <div id="cart-items-list" class="flex-1 overflow-y-auto p-3 space-y-2"></div>
+
+    <div id="cart-empty-view" class="hidden flex-1 flex flex-col items-center justify-center p-6 text-center">
+      <p class="text-xs text-slate-400 mb-3">Your shopping bag is empty.</p>
+      <button onclick="closeCartDrawer(); filterByGroup('all');" class="px-4 py-2 bg-black text-white text-xs font-semibold rounded-lg">
+        Explore Activewear
+      </button>
+    </div>
+
+    <div id="cart-footer" class="p-3.5 border-t border-slate-100 bg-slate-50 space-y-2.5">
+      <div class="space-y-1 text-xs text-slate-600">
+        <div class="flex justify-between">
+          <span>Subtotal</span>
+          <span id="cart-subtotal" class="font-bold text-black">₹0</span>
+        </div>
+        <div class="flex justify-between">
+          <span>Delivery</span>
+          <span id="cart-shipping" class="font-semibold text-emerald-600">FREE</span>
+        </div>
+        <div class="flex justify-between text-sm font-black text-black pt-1 border-t border-slate-200">
+          <span>Total</span>
+          <span id="cart-total" class="text-rose-600">₹0</span>
+        </div>
+      </div>
+
+      <button onclick="openCheckoutModal()" class="w-full py-2.5 bg-black hover:bg-slate-800 text-white rounded-lg font-bold text-xs flex items-center justify-center gap-1.5">
+        <span>Proceed to Checkout</span>
+        <i data-lucide="arrow-right" class="w-3.5 h-3.5"></i>
+      </button>
+    </div>
+
+  </div>
+
+  <!-- Express Checkout Modal -->
+  <div id="checkout-modal" class="fixed inset-0 z-50 hidden flex items-center justify-center p-3 sm:p-4">
+    <div class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm" onclick="closeCheckoutModal()"></div>
+    
+    <div class="relative bg-white rounded-2xl shadow-xl max-w-md w-full max-h-[90vh] overflow-y-auto z-10 p-4 sm:p-6 border border-slate-100">
+      <button onclick="closeCheckoutModal()" class="absolute top-3 right-3 text-slate-400 hover:text-black">
+        <i data-lucide="x" class="w-4 h-4"></i>
+      </button>
+
+      <h3 class="text-base font-bold text-black mb-1">Checkout</h3>
+      <p class="text-xs text-slate-400 mb-3">Provide shipping address</p>
+
+      <form id="checkout-form" onsubmit="handleCheckoutSubmit(event)" class="space-y-2.5 text-xs">
+        <div>
+          <label class="block font-medium text-slate-700 mb-0.5">Name *</label>
+          <input type="text" id="cust-name" required placeholder="Full Name" class="w-full px-3 py-1.5 rounded-lg border border-slate-200 text-xs focus:outline-none focus:border-black" />
+        </div>
+
+        <div class="grid grid-cols-2 gap-2">
+          <div>
+            <label class="block font-medium text-slate-700 mb-0.5">Phone *</label>
+            <input type="tel" id="cust-phone" required placeholder="Mobile No." class="w-full px-3 py-1.5 rounded-lg border border-slate-200 text-xs focus:outline-none focus:border-black" />
+          </div>
+          <div>
+            <label class="block font-medium text-slate-700 mb-0.5">PIN Code *</label>
+            <input type="text" id="cust-pincode" required placeholder="PIN Code" class="w-full px-3 py-1.5 rounded-lg border border-slate-200 text-xs focus:outline-none focus:border-black" />
+          </div>
+        </div>
+
+        <div>
+          <label class="block font-medium text-slate-700 mb-0.5">Address *</label>
+          <textarea id="cust-address" required rows="2" placeholder="House/Flat No, Street, City" class="w-full px-3 py-1.5 rounded-lg border border-slate-200 text-xs focus:outline-none focus:border-black"></textarea>
+        </div>
+
+        <div>
+          <label class="block font-medium text-slate-700 mb-0.5">City *</label>
+          <input type="text" id="cust-city" required placeholder="City" class="w-full px-3 py-1.5 rounded-lg border border-slate-200 text-xs focus:outline-none focus:border-black" />
+        </div>
+
+        <div class="pt-1">
+          <label class="block font-medium text-slate-900 mb-1">Payment Method:</label>
+          <div class="space-y-1.5">
+            <label class="flex items-center justify-between p-2.5 rounded-lg border border-slate-300 bg-white cursor-pointer hover:border-black transition-colors">
+              <div class="flex items-center gap-2">
+                <input type="radio" name="payment_method" value="razorpay" class="text-black" />
+                <div>
+                  <span class="font-bold text-slate-900 block text-xs">Online Payment (Razorpay)</span>
+                  <span class="text-[10px] text-slate-500">UPI (GPay/PhonePe), Cards, NetBanking</span>
+                </div>
+              </div>
+              <span class="text-[9px] font-bold bg-rose-500 text-white px-2 py-0.5 rounded">ONLINE</span>
+            </label>
+            <label class="flex items-center justify-between p-2.5 rounded-lg border border-slate-200 bg-slate-50 cursor-pointer">
+              <div class="flex items-center gap-2">
+                <input type="radio" name="payment_method" value="whatsapp" checked class="text-black" />
+                <span class="font-medium text-slate-900">Direct WhatsApp Order</span>
+              </div>
+              <span class="text-[9px] font-bold bg-emerald-600 text-white px-1.5 py-0.5 rounded">FAST</span>
+            </label>
+            <label class="flex items-center gap-2 p-2.5 rounded-lg border border-slate-200 bg-white cursor-pointer">
+              <input type="radio" name="payment_method" value="cod" class="text-black" />
+              <span class="font-medium text-slate-900">Cash on Delivery (COD)</span>
+            </label>
+          </div>
+        </div>
+
+        <div class="bg-slate-100 p-2 rounded-lg flex items-center justify-between font-bold text-slate-800">
+          <span>Total:</span>
+          <span id="checkout-total-display" class="text-rose-600">₹0</span>
+        </div>
+
+        <button type="submit" id="place-order-btn" class="w-full py-2.5 bg-black hover:bg-slate-800 text-white rounded-lg font-bold text-xs">
+          Place Order
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Order Success Modal -->
+  <div id="order-success-modal" class="fixed inset-0 z-50 hidden flex items-center justify-center p-4">
+    <div class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm"></div>
+    <div class="relative bg-white rounded-2xl shadow-xl max-w-sm w-full p-5 text-center z-10 border border-slate-100">
+      <div class="w-10 h-10 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto mb-2">
+        <i data-lucide="check-circle" class="w-6 h-6"></i>
+      </div>
+      <h3 class="text-sm font-bold text-slate-900">Order Placed!</h3>
+      <p class="text-xs text-slate-500 mt-0.5">Order #<span id="success-order-num" class="font-semibold text-slate-800"></span></p>
+
+      <div class="my-3 p-2.5 bg-slate-50 rounded-lg text-left text-xs space-y-1">
+        <div class="flex justify-between">
+          <span class="text-slate-500">Customer:</span>
+          <span id="success-cust-name" class="font-semibold text-slate-800"></span>
+        </div>
+        <div class="flex justify-between">
+          <span class="text-slate-500">Total:</span>
+          <span id="success-order-total" class="font-bold text-rose-600"></span>
+        </div>
+      </div>
+
+      <div class="space-y-1.5">
+        <a id="success-whatsapp-btn" href="#" target="_blank" class="w-full py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg font-semibold text-xs flex items-center justify-center gap-1.5">
+          <i data-lucide="message-circle" class="w-3.5 h-3.5"></i>
+          <span>Send via WhatsApp</span>
+        </a>
+        <button onclick="closeSuccessModal()" class="w-full py-1.5 text-xs text-slate-500 font-medium">
+          Continue Browsing
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Track Order Modal -->
+  <div id="track-modal" class="fixed inset-0 z-50 hidden flex items-center justify-center p-4">
+    <div class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm" onclick="closeTrackModal()"></div>
+    <div class="relative bg-white rounded-2xl shadow-xl max-w-sm w-full p-4 z-10 border border-slate-100">
+      <button onclick="closeTrackModal()" class="absolute top-3 right-3 text-slate-400">
+        <i data-lucide="x" class="w-4 h-4"></i>
+      </button>
+
+      <h3 class="text-sm font-bold text-slate-900 mb-0.5">Track Order</h3>
+      <p class="text-xs text-slate-400 mb-3">Order Number or Phone</p>
+
+      <div class="space-y-2 text-xs">
+        <div class="flex gap-2">
+          <input type="text" id="track-input" placeholder="Order # or Phone" class="flex-1 px-2.5 py-1.5 rounded-lg border border-slate-200 text-xs focus:outline-none" />
+          <button onclick="handleTrackOrder()" class="px-3 py-1.5 bg-black text-white font-semibold rounded-lg text-xs">Search</button>
+        </div>
+        <div id="track-results" class="pt-1 space-y-1.5 max-h-48 overflow-y-auto"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Notification Container -->
+  <div id="toast-container" class="toast-container"></div>
+
+  <!-- Floating WhatsApp Button (Desktop) -->
+  <a id="floating-whatsapp" href="https://wa.me/919876543210" target="_blank" class="whatsapp-float-btn hidden sm:flex fixed bottom-5 right-5 z-40 w-11 h-11 rounded-full items-center justify-center text-white shadow-lg" title="WhatsApp Chat">
+    <i data-lucide="message-circle" class="w-5 h-5"></i>
+  </a>
+
+  <!-- Storefront JavaScript -->
+  <script src="/js/app.js"></script>
+</body>
+</html>

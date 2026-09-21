@@ -1,0 +1,427 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Invoice - Web Development Project</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+    
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+    
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: #f1f5f9;
+      color: #1e293b;
+      padding: 40px 20px;
+    }
+
+    .invoice-card {
+      max-width: 800px;
+      margin: 0 auto;
+      background: #ffffff;
+      padding: 48px;
+      border-radius: 12px;
+      box-shadow: 0 4px 25px rgba(0,0,0,0.06);
+    }
+
+    .header-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      border-bottom: 2px solid #f1f5f9;
+      padding-bottom: 28px;
+      margin-bottom: 32px;
+    }
+
+    .agency-name {
+      font-size: 24px;
+      font-weight: 800;
+      color: #0f172a;
+      letter-spacing: -0.5px;
+    }
+
+    .agency-tagline {
+      font-size: 13px;
+      color: #64748b;
+      margin-top: 4px;
+    }
+
+    .invoice-title-block {
+      text-align: right;
+    }
+
+    .invoice-title {
+      font-size: 28px;
+      font-weight: 900;
+      color: #ff5238;
+      letter-spacing: 1px;
+    }
+
+    .invoice-meta {
+      font-size: 13px;
+      color: #64748b;
+      margin-top: 6px;
+      line-height: 1.6;
+    }
+
+    .parties-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 32px;
+      margin-bottom: 36px;
+    }
+
+    .party-title {
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: #94a3b8;
+      margin-bottom: 8px;
+    }
+
+    .party-name {
+      font-size: 16px;
+      font-weight: 700;
+      color: #0f172a;
+    }
+
+    .party-desc {
+      font-size: 13px;
+      color: #475569;
+      line-height: 1.6;
+      margin-top: 4px;
+    }
+
+    table.items-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-bottom: 32px;
+    }
+
+    table.items-table th {
+      background: #f8fafc;
+      padding: 12px 16px;
+      text-align: left;
+      font-size: 12px;
+      font-weight: 700;
+      color: #475569;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      border-top: 1px solid #e2e8f0;
+      border-bottom: 1px solid #e2e8f0;
+    }
+
+    table.items-table td {
+      padding: 16px;
+      font-size: 13px;
+      border-bottom: 1px solid #f1f5f9;
+      vertical-align: top;
+    }
+
+    table.items-table td.amount {
+      text-align: right;
+      font-weight: 600;
+    }
+
+    table.items-table th.amount {
+      text-align: right;
+    }
+
+    .item-title {
+      font-weight: 700;
+      color: #0f172a;
+      margin-bottom: 4px;
+    }
+
+    .item-desc {
+      font-size: 12px;
+      color: #64748b;
+      line-height: 1.5;
+    }
+
+    .summary-section {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 36px;
+    }
+
+    .payment-instructions {
+      max-width: 360px;
+      background: #f8fafc;
+      padding: 20px;
+      border-radius: 8px;
+      border: 1px solid #e2e8f0;
+    }
+
+    .payment-title {
+      font-size: 12px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: #0f172a;
+      margin-bottom: 8px;
+    }
+
+    .payment-detail {
+      font-size: 12px;
+      color: #475569;
+      line-height: 1.7;
+    }
+
+    .totals-table {
+      width: 260px;
+    }
+
+    .total-row {
+      display: flex;
+      justify-content: space-between;
+      padding: 6px 0;
+      font-size: 13px;
+      color: #475569;
+    }
+
+    .grand-total-row {
+      display: flex;
+      justify-content: space-between;
+      padding: 12px 0 0 0;
+      margin-top: 8px;
+      border-top: 2px solid #0f172a;
+      font-size: 18px;
+      font-weight: 800;
+      color: #0f172a;
+    }
+
+    .terms-box {
+      border-top: 1px solid #e2e8f0;
+      padding-top: 20px;
+      font-size: 11px;
+      color: #64748b;
+      line-height: 1.6;
+    }
+
+    .terms-box ul {
+      margin-left: 18px;
+      margin-top: 6px;
+    }
+
+    .print-btn {
+      display: block;
+      margin: 0 auto 24px auto;
+      padding: 12px 28px;
+      background: #0f172a;
+      color: #ffffff;
+      font-size: 14px;
+      font-weight: 700;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+      transition: background 0.2s;
+    }
+    .print-btn:hover {
+      background: #ff5238;
+    }
+
+    @media print {
+      body {
+        background: #ffffff;
+        padding: 0;
+      }
+      .invoice-card {
+        box-shadow: none;
+        padding: 0;
+      }
+      .print-btn {
+        display: none;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <button class="print-btn" onclick="window.print()">🖨️ Print / Save as PDF</button>
+
+  <div class="invoice-card">
+    
+    <!-- Top Header -->
+    <div class="header-row">
+      <div>
+        <div class="agency-name">Web Solver Cafe </div>
+        <div class="agency-tagline">Solve, Build &amp; Grow</div>
+        <div class="agency-tagline">Email: pwnprjapti@gmail.com | Phone: +91 6378394242</div>
+      </div>
+      <div class="invoice-title-block">
+        <div class="invoice-title">INVOICE</div>
+        <div class="invoice-meta">
+          <strong>Invoice No:</strong> #INV-2026-001<br>
+          <strong>Date:</strong> 10 September 2026<br>
+          <strong>Status:</strong> <span style="color:#f59e0b; font-weight:700;">Pending 30% Advance (₹4,500)</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Parties -->
+    <div class="parties-grid">
+      <div>
+        <div class="party-title">Billed To (Client):</div>
+        <div class="party-name">[Client Name / Business Name]</div>
+        <div class="party-desc">
+          Men &amp; Kids Sports Wear Store<br>
+          Phone: +91 9662400061 <br>
+          Location: [Client City / State]
+        </div>
+      </div>
+      <div>
+        <div class="party-title">Project Summary:</div>
+        <div class="party-name">Sports Wear E-Commerce Website</div>
+        <div class="party-desc">
+          Platform: Node.js + Express + SQLite<br>
+          Design: Cultstore-Inspired Sliding UI<br>
+          Payment: Razorpay Online (UPI/Cards) + WhatsApp + COD
+        </div>
+      </div>
+    </div>
+
+    <!-- Itemized Services Table -->
+    <table class="items-table">
+      <thead>
+        <tr>
+          <th style="width: 55%;">Description</th>
+          <th style="width: 15%; text-align: center;">Qty</th>
+          <th style="width: 15%; text-align: right;">Rate</th>
+          <th class="amount" style="width: 15%;">Amount (INR)</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>
+            <div class="item-title">1. Custom E-Commerce Website Development</div>
+            <div class="item-desc">
+              - Cultstore-inspired sliding landing page (Auto-sliding hero banner + horizontal product rails)<br>
+              - Mobile-first responsive UI with bottom app navigation bar<br>
+              - Men's &amp; Children's sports wear catalog, categories &amp; size filters
+            </div>
+          </td>
+          <td style="text-align: center;">1</td>
+          <td style="text-align: right;">₹7,000</td>
+          <td class="amount">₹7,000</td>
+        </tr>
+        <tr>
+          <td>
+            <div class="item-title">2. Razorpay Online Payment Gateway Integration</div>
+            <div class="item-desc">
+              - Secure Razorpay online checkout integration<br>
+              - Supports UPI (GPay, PhonePe, Paytm), Credit/Debit Cards, NetBanking &amp; Wallets<br>
+              - Real-time payment verification, automated receipts &amp; instant order confirmation
+            </div>
+          </td>
+          <td style="text-align: center;">1</td>
+          <td style="text-align: right;">₹2,500</td>
+          <td class="amount">₹2,500</td>
+        </tr>
+        <tr>
+          <td>
+            <div class="item-title">3. WhatsApp Direct Ordering &amp; Admin Dashboard</div>
+            <div class="item-desc">
+              - 1-Click automated WhatsApp checkout + Cash on Delivery (COD) mode<br>
+              - Secure Store Owner Admin Panel (Product CRUD, order status, customer chat)<br>
+              - Live customer order tracking by Order ID / Mobile Number
+            </div>
+          </td>
+          <td style="text-align: center;">1</td>
+          <td style="text-align: right;">₹3,000</td>
+          <td class="amount">₹3,000</td>
+        </tr>
+        <tr>
+          <td>
+            <div class="item-title">4. Domain, Cloud Deployment &amp; SSL Setup</div>
+            <div class="item-desc">
+              - 1 Year Domain Registration (.in / .com)<br>
+              - Node.js cloud server configuration with free SSL security certificate<br>
+              - High-speed, zero-monthly-subscription architecture
+            </div>
+          </td>
+          <td style="text-align: center;">1</td>
+          <td style="text-align: right;">₹1,500</td>
+          <td class="amount">₹1,500</td>
+        </tr>
+        <tr>
+          <td>
+            <div class="item-title">5. Initial Catalog Setup &amp; 30-Day Support</div>
+            <div class="item-desc">
+              - 12-15 initial products setup with high-quality athletic images and pricing<br>
+              - 30 days complimentary technical bug-fixing and launch support
+            </div>
+          </td>
+          <td style="text-align: center;">1</td>
+          <td style="text-align: right;">₹1,000</td>
+          <td class="amount">₹1,000</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <!-- Totals & Payment Details -->
+    <div class="summary-section">
+      <div class="payment-instructions">
+        <div class="payment-title">Payment Schedule (3-Tier Milestones)</div>
+        <div class="payment-detail">
+          <strong>Milestone 1 (30% Advance):</strong> ₹4,500 (Project kickoff &amp; setup)<br>
+          <strong>Milestone 2 (40% Half Completion):</strong> ₹6,000 (UI &amp; Storefront Demo)<br>
+          <strong>Milestone 3 (30% Post-Deployment):</strong> ₹4,500 (Live launch &amp; Handover)
+        </div>
+        <hr style="border: 0; border-top: 1px dashed #cbd5e1; margin: 10px 0;">
+        <div class="payment-title">Bank / UPI Transfer Details</div>
+        <div class="payment-detail">
+          <strong>UPI ID:</strong> 6378394242@ibl<br>
+          <strong>Account Name:</strong> PAWAN <br>
+          <strong>Account Number:</strong> 1242001700125665 <br>
+          <strong>IFSC Code:</strong> PUNB0124200
+        </div>
+      </div>
+
+      <div class="totals-table">
+        <div class="total-row">
+          <span>Subtotal:</span>
+          <span>₹15,000.00</span>
+        </div>
+        <div class="total-row">
+          <span>Discount:</span>
+          <span>-₹0.00</span>
+        </div>
+        <div class="total-row">
+          <span>Taxes (Non-GST / Exempt):</span>
+          <span>₹0.00</span>
+        </div>
+        <div class="grand-total-row">
+          <span>Total Amount:</span>
+          <span style="color:#ff5238;">₹15,000.00</span>
+        </div>
+        <div style="font-size: 11px; text-align: right; color: #64748b; margin-top: 4px;">
+          (Rupees Fifteen Thousand Only)
+        </div>
+      </div>
+    </div>
+
+    <!-- Terms -->
+    <div class="terms-box">
+      <strong>Terms &amp; Conditions:</strong>
+      <ul>
+        <li><strong>Milestone 1 (30% Advance - ₹4,500):</strong> Required to initiate design, server provisioning, and project commencement.</li>
+        <li><strong>Milestone 2 (40% Half Completion - ₹6,000):</strong> Payable upon completion and presentation of the activewear storefront UI, hero slider, and product rails demo.</li>
+        <li><strong>Milestone 3 (30% Post-Deployment - ₹4,500):</strong> Payable upon final live deployment, payment gateway verification, and handover of admin master credentials.</li>
+        <li><strong>Hosting Server Recurring Costs (EXCLUDED):</strong> Development fee includes technical cloud setup and deployment. Ongoing monthly/annual server hosting rental charges and Year 2+ domain renewals are excluded and payable directly by the Client.</li>
+        <li>Includes 30 days of free bug-fixing and technical launch support.</li>
+      </ul>
+    </div>
+
+  </div>
+
+</body>
+</html>

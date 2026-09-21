@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Client Agreement - Web Development Project</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+    
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+    
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: #f1f5f9;
+      color: #1e293b;
+      padding: 40px 20px;
+      line-height: 1.6;
+    }
+
+    .contract-card {
+      max-width: 820px;
+      margin: 0 auto;
+      background: #ffffff;
+      padding: 56px 48px;
+      border-radius: 12px;
+      box-shadow: 0 4px 25px rgba(0,0,0,0.06);
+    }
+
+    .contract-header {
+      text-align: center;
+      border-bottom: 2px solid #0f172a;
+      padding-bottom: 24px;
+      margin-bottom: 32px;
+    }
+
+    .contract-title {
+      font-size: 24px;
+      font-weight: 900;
+      color: #0f172a;
+      letter-spacing: -0.5px;
+      text-transform: uppercase;
+    }
+
+    .contract-subtitle {
+      font-size: 13px;
+      color: #64748b;
+      margin-top: 6px;
+      font-weight: 500;
+    }
+
+    .contract-meta {
+      display: flex;
+      justify-content: space-between;
+      background: #f8fafc;
+      padding: 16px 20px;
+      border-radius: 8px;
+      border: 1px solid #e2e8f0;
+      margin-bottom: 32px;
+      font-size: 13px;
+    }
+
+    .clause {
+      margin-bottom: 28px;
+    }
+
+    .clause-title {
+      font-size: 15px;
+      font-weight: 800;
+      color: #0f172a;
+      margin-bottom: 10px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .clause-title span {
+      background: #0f172a;
+      color: #ffffff;
+      font-size: 11px;
+      padding: 2px 7px;
+      border-radius: 4px;
+    }
+
+    .clause-content {
+      font-size: 13px;
+      color: #334155;
+      line-height: 1.7;
+    }
+
+    .clause-content ul {
+      margin-left: 24px;
+      margin-top: 8px;
+    }
+
+    .clause-content li {
+      margin-bottom: 6px;
+    }
+
+    .highlight-box {
+      background: #fff7ed;
+      border-left: 4px solid #f97316;
+      padding: 14px 18px;
+      margin: 12px 0;
+      border-radius: 0 6px 6px 0;
+      font-size: 13px;
+    }
+
+    .pricing-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 12px;
+      font-size: 13px;
+    }
+
+    .pricing-table th, .pricing-table td {
+      border: 1px solid #e2e8f0;
+      padding: 10px 14px;
+      text-align: left;
+    }
+
+    .pricing-table th {
+      background: #f8fafc;
+      font-weight: 700;
+      color: #1e293b;
+    }
+
+    .signatures-section {
+      margin-top: 48px;
+      padding-top: 28px;
+      border-top: 2px solid #e2e8f0;
+    }
+
+    .signatures-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 48px;
+      margin-top: 24px;
+    }
+
+    .sig-box {
+      border: 1px dashed #94a3b8;
+      border-radius: 8px;
+      padding: 20px;
+      background: #fafafa;
+    }
+
+    .sig-title {
+      font-size: 12px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: #64748b;
+      margin-bottom: 12px;
+    }
+
+    .sig-line {
+      height: 60px;
+      border-bottom: 1px solid #cbd5e1;
+      margin-bottom: 12px;
+    }
+
+    .sig-meta {
+      font-size: 12px;
+      color: #475569;
+      line-height: 1.8;
+    }
+
+    .print-btn {
+      display: block;
+      margin: 0 auto 24px auto;
+      padding: 12px 28px;
+      background: #0f172a;
+      color: #ffffff;
+      font-size: 14px;
+      font-weight: 700;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+      transition: background 0.2s;
+    }
+    .print-btn:hover {
+      background: #ff5238;
+    }
+
+    @media print {
+      body {
+        background: #ffffff;
+        padding: 0;
+      }
+      .contract-card {
+        box-shadow: none;
+        padding: 0;
+      }
+      .print-btn {
+        display: none;
+      }
+      .clause {
+        page-break-inside: avoid;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <button class="print-btn" onclick="window.print()">🖨️ Print / Save as PDF</button>
+
+  <div class="contract-card">
+
+    <!-- Header -->
+    <div class="contract-header">
+      <div class="contract-title">Web Development &amp; Service Agreement</div>
+      <div class="contract-subtitle">Custom E-Commerce Storefront Development</div>
+    </div>
+
+    <!-- Meta -->
+    <div class="contract-meta">
+      <div>
+        <strong>Effective Date:</strong> 10 September 2026<br>
+        <strong>Agreement Ref:</strong> WDA-2026-001
+      </div>
+      <div>
+        <strong>Estimated Completion:</strong> 5 to 7 Working Days<br>
+        <strong>Total Agreed Cost:</strong> ₹15,000 INR
+      </div>
+    </div>
+
+    <!-- Clause 1 -->
+    <div class="clause">
+      <div class="clause-title"><span>1</span> Parties Involved</div>
+      <div class="clause-content">
+        This Agreement is entered into between:
+        <ul>
+          <li><strong>Service Provider (Agency):</strong> Web Solver Cafe, having business operations at Alwar, Rajasthan, Contact: +91 6378394242, Email: pwnprjapti@gmail.com (hereinafter referred to as "Agency").</li>
+          <li><strong>Client:</strong> [Client Name / Business Name], having business operations at [Client City / Address], Contact: +91 98765 43210 (hereinafter referred to as "Client").</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- Clause 2 -->
+    <div class="clause">
+      <div class="clause-title"><span>2</span> Scope of Work &amp; Deliverables</div>
+      <div class="clause-content">
+        The Agency agrees to design, engineer, and deploy a custom activewear e-commerce website with the following specific features:
+        <ul>
+          <li><strong>Cultstore-Style UI &amp; UX:</strong> Clean, minimalist landing page with an auto-sliding hero banner (4 active slides, mobile touch swipe, navigation arrows &amp; indicator dots) and horizontal sliding product rails ("Trending in Men's Sports" &amp; "Popular in Kids' Sports").</li>
+          <li><strong>Men's &amp; Children's Sports Wear Catalog:</strong> Dedicated sections for Gym Tees, Trackpants, Shorts, Kids Football Sets, Tracksuits, and PE wear with size and subcategory filters.</li>
+          <li><strong>Razorpay Online Payment Gateway:</strong> Full integration of Razorpay secure checkout supporting UPI (GPay, PhonePe, Paytm), Credit/Debit Cards, NetBanking &amp; Wallets with instant payment confirmation and automated order creation. <em>(Note: Standard Razorpay transaction fee of ~2% + GST is charged directly by Razorpay per sale; Client shall provide Razorpay Merchant KYC API keys).</em></li>
+          <li><strong>Multi-Channel Ordering Options:</strong> Razorpay Online Payment + 1-Click WhatsApp Direct Ordering + Cash on Delivery (COD) mode.</li>
+          <li><strong>Store Owner Admin Dashboard (/admin):</strong> Secure credential-protected portal to add, edit, or remove products, manage pricing, view received orders, update delivery status, and click-to-chat directly with customers on WhatsApp.</li>
+          <li><strong>Order Tracking:</strong> Live status tracker for customers using their Order ID or Phone Number.</li>
+          <li><strong>Domain &amp; Cloud Deployment:</strong> 1-Year Domain Registration (.in / .com) and high-speed Node.js cloud deployment with free SSL security certificate (zero monthly platform fees).</li>
+          <li><strong>Catalog Provisioning:</strong> Initial upload and formatting of up to 15 products provided by the Client.</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- Clause 3 -->
+    <div class="clause">
+      <div class="clause-title"><span>3</span> Commercials &amp; Payment Schedule</div>
+      <div class="clause-content">
+        The total agreed project fee is <strong>₹15,000 (Rupees Fifteen Thousand Only)</strong>. Payment shall be made in three milestone installments:
+        <table class="pricing-table">
+          <thead>
+            <tr>
+              <th>Milestone</th>
+              <th>Trigger / Stage</th>
+              <th>Percentage</th>
+              <th>Amount</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>Milestone 1 (Advance)</strong></td>
+              <td>Upon signing of this agreement, before commencement of design and hosting setup.</td>
+              <td>30%</td>
+              <td><strong>₹4,500</strong></td>
+            </tr>
+            <tr>
+              <td><strong>Milestone 2 (Half Completion)</strong></td>
+              <td>Upon 50% project completion (presentation of activewear storefront UI, sliding hero banner, and product rails demo).</td>
+              <td>40%</td>
+              <td><strong>₹6,000</strong></td>
+            </tr>
+            <tr>
+              <td><strong>Milestone 3 (Post-Deployment)</strong></td>
+              <td>Upon final live deployment, payment gateway verification, domain linking, and handover of admin credentials.</td>
+              <td>30%</td>
+              <td><strong>₹4,500</strong></td>
+            </tr>
+          </tbody>
+        </table>
+        <div class="highlight-box">
+          <strong>Note:</strong> Work commences upon receipt of Milestone 1 (30%). Staging preview is shared upon Milestone 2 (40%). Master admin access, source code, and domain controls are officially transferred upon full clearance of Milestone 3 (30%).
+        </div>
+      </div>
+    </div>
+
+    <!-- Clause 4 -->
+    <div class="clause">
+      <div class="clause-title"><span>4</span> Project Timeline &amp; Client Responsibilities</div>
+      <div class="clause-content">
+        <ul>
+          <li>The project timeline is estimated at <strong>5 to 7 working days</strong> from the receipt of the advance payment and required product materials.</li>
+          <li><strong>Client Obligations:</strong> The Client agrees to provide product images, names, prices, business WhatsApp number, and store details promptly. Feedback on mockups and staging previews must be provided within 48 hours to maintain the timeline.</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- Clause 5 -->
+    <div class="clause">
+      <div class="clause-title"><span>5</span> Revisions &amp; Scope Adjustments</div>
+      <div class="clause-content">
+        <ul>
+          <li>The project includes up to <strong>two (2) rounds of minor revisions</strong> (e.g., text corrections, color adjustments, image swaps) prior to final launch.</li>
+          <li>Any major functional additions, new third-party integrations, or features requested outside of Clause 2 will be treated as an add-on and quoted separately.</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- Clause 6 -->
+    <div class="clause">
+      <div class="clause-title"><span>6</span> Intellectual Property &amp; Ownership</div>
+      <div class="clause-content">
+        <ul>
+          <li>Upon receipt of 100% full payment, all intellectual property rights to the website content, design implementation, and source code shall belong entirely to the <strong>Client</strong>.</li>
+          <li>The Agency reserves the right to display the completed work, screenshots, and live link in its professional portfolio and agency marketing materials.</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- Clause 7 -->
+    <div class="clause">
+      <div class="clause-title"><span>7</span> Warranty, Support &amp; Maintenance</div>
+      <div class="clause-content">
+        <ul>
+          <li><strong>30-Day Bug Warranty:</strong> The Agency provides 30 days of complimentary bug-fixing and technical support following final deployment.</li>
+          <li><strong>Scope of Warranty:</strong> This warranty covers software bugs, layout alignment issues, and script errors within the delivered scope. It does not cover issues arising from unauthorized code alterations by third parties or client changes to server settings.</li>
+          <li><strong>Optional Maintenance (AMC):</strong> Following the 30-day warranty, an optional Annual Maintenance Contract (AMC) can be availed at ₹3,000 - ₹5,000/year upon mutual agreement.</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- Clause 8 -->
+    <div class="clause">
+      <div class="clause-title"><span>8</span> Hosting, Gateway &amp; Third-Party Cost Exclusions</div>
+      <div class="clause-content">
+        For complete clarity, the agreed project fee of <strong>₹15,000</strong> covers website engineering, UI design, database setup, and technical deployment. The following ongoing operational expenses are <strong>strictly EXCLUDED</strong> from the Agency's responsibility and shall be borne directly by the Client:
+        <ul>
+          <li><strong>Server Hosting Rentals (EXCLUDED):</strong> The Agency performs full technical cloud setup and deployment. Any recurring monthly or annual server hosting costs (e.g., VPS, Hostinger, AWS, or cloud hosting provider bills) are strictly the Client's financial responsibility.</li>
+          <li><strong>Domain Renewal (EXCLUDED after Year 1):</strong> Initial 1st-year domain registration is included. Domain renewals from Year 2 onwards (estimated ₹600 - ₹900/year) shall be renewed and paid directly by the Client.</li>
+          <li><strong>Payment Gateway Transaction Fees (EXCLUDED):</strong> Razorpay processing charges (~2% + 18% GST per transaction) are deducted directly by Razorpay from customer settlements and are not covered by the Agency.</li>
+          <li><strong>Third-Party Paid APIs (EXCLUDED):</strong> Free direct WhatsApp click-to-chat ordering is included. If the Client chooses to integrate paid WhatsApp Business Cloud API or paid SMS gateways in the future, all message charges will be paid directly by the Client.</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- Signatures -->
+    <div class="signatures-section">
+      <div class="clause-title">Acceptance &amp; Signatures</div>
+      <p style="font-size: 13px; color: #64748b;">By signing below, both parties acknowledge and agree to the terms, scope, and payment schedule set forth in this Agreement.</p>
+
+      <div class="signatures-grid">
+        <!-- Agency -->
+        <div class="sig-box">
+          <div class="sig-title">For Agency:</div>
+          <div class="sig-line"></div>
+          <div class="sig-meta">
+            <strong>Authorized Signatory:</strong> ______________________<br>
+            <strong>Agency Name:</strong> Web Solver Cafe<br>
+            <strong>Date:</strong> 10 September 2026
+          </div>
+        </div>
+
+        <!-- Client -->
+        <div class="sig-box">
+          <div class="sig-title">For Client:</div>
+          <div class="sig-line"></div>
+          <div class="sig-meta">
+            <strong>Authorized Signatory:</strong> ______________________<br>
+            <strong>Business Name:</strong> [Client Business Name]<br>
+            <strong>Date:</strong> ______________________
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+</body>
+</html>
