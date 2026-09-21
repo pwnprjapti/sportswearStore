@@ -84,7 +84,7 @@ npm start
 3. Click **New +** &rarr; **Web Service** &rarr; Connect your GitHub repository.
 4. Set:
    - **Environment**: `Node`
-   - **Build Command**: `npm install && npm run seed`
+   - **Build Command**: `npm install && npm rebuild sqlite3 --build-from-source && npm run seed`
    - **Start Command**: `npm start`
 5. Click **Deploy Web Service**.
 6. Under **Custom Domains**, add your client's domain (e.g., `www.yourclothingbrand.in`) with free automatic SSL!
