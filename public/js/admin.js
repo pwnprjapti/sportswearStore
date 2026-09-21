@@ -1,4 +1,4 @@
-// UrbanVogue Admin Dashboard Engine
+// ProActive / UrbanVogue Admin Dashboard Engine (100% LocalStorage Test Mode)
 let adminToken = localStorage.getItem('urbanvogue_admin_token');
 let adminProducts = [];
 let adminOrders = [];
@@ -24,32 +24,21 @@ document.addEventListener('DOMContentLoaded', () => {
   checkAuth();
 });
 
+// Helper: Read file as Data URL
+function readFileAsDataURL(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result);
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+}
+
 // 1. Auth Management
-async function checkAuth() {
-  if (!adminToken) {
-    showLoginView();
-    return;
-  }
-
-  try {
-    const res = await fetch('/api/admin/stats', {
-      headers: { Authorization: `Bearer ${adminToken}` }
-    });
-
-    if (res.status === 401 || res.status === 403) {
-      handleLogout();
-      return;
-    }
-
-    const data = await res.json();
-    if (data.success) {
-      showDashboardView();
-      renderDashboardStats(data);
-    } else {
-      showLoginView();
-    }
-  } catch (err) {
-    console.error('Error verifying auth:', err);
+function checkAuth() {
+  if (window.Store && window.Store.verifyAdmin()) {
+    showDashboardView();
+  } else {
     showLoginView();
   }
 }
@@ -66,7 +55,7 @@ function showDashboardView() {
   loadInitialData();
 }
 
-async function handleAdminLogin(event) {
+function handleAdminLogin(event) {
   event.preventDefault();
   const username = document.getElementById('admin-username').value.trim();
   const password = document.getElementById('admin-password').value.trim();
@@ -77,34 +66,22 @@ async function handleAdminLogin(event) {
   btn.disabled = true;
   btn.innerText = 'Signing In...';
 
-  try {
-    const res = await fetch('/api/admin/login', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ username, password })
-    });
-
-    const data = await res.json();
-    if (data.success && data.token) {
-      adminToken = data.token;
-      localStorage.setItem('urbanvogue_admin_token', adminToken);
-      showDashboardView();
-    } else {
-      alertBox.innerText = data.message || 'Invalid credentials';
-      alertBox.classList.remove('hidden');
-    }
-  } catch (err) {
-    alertBox.innerText = 'Network error during login';
+  const res = window.Store.adminLogin(username, password);
+  if (res.success) {
+    adminToken = res.token;
+    showDashboardView();
+  } else {
+    alertBox.innerText = res.message || 'Invalid credentials. (Hint: admin / admin123)';
     alertBox.classList.remove('hidden');
-  } finally {
-    btn.disabled = false;
-    btn.innerText = 'Sign In to Dashboard';
   }
+
+  btn.disabled = false;
+  btn.innerText = 'Sign In to Dashboard';
 }
 
 function handleLogout() {
   adminToken = null;
-  localStorage.removeItem('urbanvogue_admin_token');
+  if (window.Store) window.Store.adminLogout();
   showLoginView();
 }
 
@@ -137,21 +114,20 @@ function switchTab(tabName) {
   if (window.lucide) lucide.createIcons();
 }
 
-async function loadInitialData() {
-  await loadDashboardStats();
-  handleDepartmentChange(); // prefill subcategories dropdown for modal
+function loadInitialData() {
+  loadDashboardStats();
+  handleDepartmentChange();
+  const s = window.Store ? window.Store.getSettings() : {};
+  if (s && s.store_name) {
+    document.getElementById('admin-brand-name').innerText = s.store_name;
+  }
 }
 
 // 3. Overview Tab: Stats & Recent
-async function loadDashboardStats() {
+function loadDashboardStats() {
   try {
-    const res = await fetch('/api/admin/stats', {
-      headers: { Authorization: `Bearer ${adminToken}` }
-    });
-    const data = await res.json();
-    if (data.success) {
-      renderDashboardStats(data);
-    }
+    const data = window.Store ? window.Store.getStats() : { stats: {}, lowStockProducts: [], recentOrders: [] };
+    renderDashboardStats(data);
   } catch (err) {
     console.error('Error loading stats:', err);
   }
@@ -197,7 +173,7 @@ function renderDashboardStats(data) {
       if (o.order_status === 'cancelled') badge = 'bg-rose-100 text-rose-800';
 
       const cleanPhone = (o.customer_phone || '').replace(/[^0-9]/g, '');
-      const waLink = `https://wa.me/${cleanPhone}?text=${encodeURIComponent(`Hi ${o.customer_name}, regards from UrbanVogue about your order #${o.order_number}`)}`;
+      const waLink = `https://wa.me/${cleanPhone}?text=${encodeURIComponent(`Hi ${o.customer_name}, regards from ProActive Sports regarding your order #${o.order_number}`)}`;
 
       return `
         <div class="p-3 bg-slate-50 rounded-2xl border border-slate-200 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 text-xs">
@@ -235,27 +211,15 @@ function renderDashboardStats(data) {
 }
 
 // 4. Products Tab
-async function loadAdminProducts() {
+function loadAdminProducts() {
   const tbody = document.getElementById('admin-products-table-body');
-  const cat = document.getElementById('admin-product-category').value;
-  const search = document.getElementById('admin-product-search').value.trim();
-
-  tbody.innerHTML = '<tr><td colspan="6" class="p-6 text-center text-xs text-slate-400">Loading catalog...</td></tr>';
+  const cat = document.getElementById('admin-product-category')?.value || 'all';
+  const search = document.getElementById('admin-product-search')?.value.trim() || '';
 
   try {
-    const query = new URLSearchParams();
-    if (cat !== 'all') query.append('category', cat);
-    if (search) query.append('search', search);
-
-    const res = await fetch(`/api/admin/products?${query.toString()}`, {
-      headers: { Authorization: `Bearer ${adminToken}` }
-    });
-    const data = await res.json();
-
-    if (data.success) {
-      adminProducts = data.products;
-      renderAdminProductsTable(data.products);
-    }
+    const prods = window.Store ? window.Store.getProducts({ category: cat, search: search }) : [];
+    adminProducts = prods;
+    renderAdminProductsTable(prods);
   } catch (err) {
     console.error('Error loading admin products:', err);
   }
@@ -263,7 +227,7 @@ async function loadAdminProducts() {
 
 function renderAdminProductsTable(products) {
   const tbody = document.getElementById('admin-products-table-body');
-  if (products.length === 0) {
+  if (!products || products.length === 0) {
     tbody.innerHTML = '<tr><td colspan="6" class="p-6 text-center text-xs text-slate-500 font-medium">No clothing items match the query.</td></tr>';
     return;
   }
@@ -272,7 +236,7 @@ function renderAdminProductsTable(products) {
     <tr class="hover:bg-slate-50 transition-colors">
       <td class="p-3.5">
         <div class="flex items-center gap-3">
-          <img src="${p.image_url}" class="w-12 h-12 object-cover rounded-xl bg-slate-200 flex-shrink-0" />
+          <img src="${p.image_url}" class="w-12 h-12 object-cover rounded-xl bg-slate-200 flex-shrink-0" onerror="this.src='https://images.unsplash.com/photo-1581009146145-b5ef050c2e1e?auto=format&fit=crop&w=600&q=80'" />
           <div class="min-w-0">
             <h4 class="font-bold text-slate-900 truncate max-w-xs">${p.title}</h4>
             <span class="text-[11px] text-slate-400">${p.subcategory || p.category}</span>
@@ -299,7 +263,7 @@ function renderAdminProductsTable(products) {
           <button onclick="openProductEditModal(${p.id})" class="p-1.5 text-slate-600 hover:text-slate-950 hover:bg-slate-100 rounded-lg" title="Edit Product">
             <i data-lucide="edit-3" class="w-4 h-4"></i>
           </button>
-          <button onclick="deleteProduct(${p.id}, '${p.title}')" class="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg" title="Delete Product">
+          <button onclick="deleteProduct(${p.id}, '${p.title.replace(/'/g, "\\'")}')" class="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg" title="Delete Product">
             <i data-lucide="trash-2" class="w-4 h-4"></i>
           </button>
         </div>
@@ -384,98 +348,75 @@ async function handleSaveProduct(event) {
   btn.innerText = 'Saving...';
 
   const id = document.getElementById('edit-product-id').value;
-  const formData = new FormData();
-
-  formData.append('title', document.getElementById('prod-title').value.trim());
-  formData.append('category', document.getElementById('prod-category').value);
-  formData.append('subcategory', document.getElementById('prod-subcategory').value);
-  formData.append('price', document.getElementById('prod-price').value);
-  formData.append('original_price', document.getElementById('prod-orig-price').value);
-  formData.append('stock', document.getElementById('prod-stock').value);
-  formData.append('sizes', document.getElementById('prod-sizes').value);
-  formData.append('colors', document.getElementById('prod-colors').value);
-  formData.append('badge', document.getElementById('prod-badge').value.trim());
-  formData.append('description', document.getElementById('prod-desc').value.trim());
-  formData.append('is_featured', document.getElementById('prod-featured').checked ? '1' : '0');
-  formData.append('is_bestseller', document.getElementById('prod-bestseller').checked ? '1' : '0');
-
   const fileInput = document.getElementById('prod-image-file');
-  if (fileInput.files.length > 0) {
-    formData.append('image', fileInput.files[0]);
-  } else {
-    formData.append('image_url', document.getElementById('prod-image-url').value.trim());
+
+  let imageUrl = document.getElementById('prod-image-url').value.trim();
+  if (fileInput && fileInput.files && fileInput.files.length > 0) {
+    try {
+      imageUrl = await readFileAsDataURL(fileInput.files[0]);
+    } catch (e) {
+      console.warn('Could not read image file', e);
+    }
   }
 
+  if (!imageUrl) {
+    imageUrl = 'https://images.unsplash.com/photo-1581009146145-b5ef050c2e1e?auto=format&fit=crop&w=800&q=80';
+  }
+
+  const payload = {
+    id: id ? parseInt(id) : undefined,
+    title: document.getElementById('prod-title').value.trim(),
+    category: document.getElementById('prod-category').value,
+    subcategory: document.getElementById('prod-subcategory').value,
+    price: document.getElementById('prod-price').value,
+    original_price: document.getElementById('prod-orig-price').value,
+    stock: document.getElementById('prod-stock').value,
+    sizes: document.getElementById('prod-sizes').value,
+    colors: document.getElementById('prod-colors').value,
+    badge: document.getElementById('prod-badge').value.trim(),
+    description: document.getElementById('prod-desc').value.trim(),
+    is_featured: document.getElementById('prod-featured').checked,
+    is_bestseller: document.getElementById('prod-bestseller').checked,
+    image_url: imageUrl
+  };
+
   try {
-    const url = id ? `/api/admin/products/${id}` : '/api/admin/products';
-    const method = id ? 'PUT' : 'POST';
-
-    const res = await fetch(url, {
-      method,
-      headers: { Authorization: `Bearer ${adminToken}` },
-      body: formData
-    });
-
-    const data = await res.json();
-    if (data.success) {
-      showAdminToast(id ? 'Product updated successfully' : 'New clothing item added!', 'success');
-      closeProductEditModal();
-      loadAdminProducts();
-      loadDashboardStats();
-    } else {
-      showAdminToast(data.message || 'Failed to save product', 'error');
-    }
+    window.Store.saveProduct(payload);
+    showAdminToast(id ? 'Product updated successfully' : 'New clothing item added!', 'success');
+    closeProductEditModal();
+    loadAdminProducts();
+    loadDashboardStats();
   } catch (err) {
-    showAdminToast('Network error saving product', 'error');
+    showAdminToast('Failed to save product in local storage', 'error');
   } finally {
     btn.disabled = false;
     btn.innerText = 'Save Product';
   }
 }
 
-async function deleteProduct(productId, title) {
+function deleteProduct(productId, title) {
   if (!confirm(`Are you sure you want to delete "${title}"?`)) return;
 
   try {
-    const res = await fetch(`/api/admin/products/${productId}`, {
-      method: 'DELETE',
-      headers: { Authorization: `Bearer ${adminToken}` }
-    });
-    const data = await res.json();
-    if (data.success) {
-      showAdminToast('Product deleted', 'info');
-      loadAdminProducts();
-      loadDashboardStats();
-    } else {
-      showAdminToast(data.message || 'Could not delete product', 'error');
-    }
+    window.Store.deleteProduct(productId);
+    showAdminToast('Product deleted from demo catalog', 'info');
+    loadAdminProducts();
+    loadDashboardStats();
   } catch (err) {
-    showAdminToast('Network error deleting product', 'error');
+    showAdminToast('Could not delete product', 'error');
   }
 }
 
 // 6. Orders Tab
-async function loadAdminOrders() {
+function loadAdminOrders() {
   const container = document.getElementById('admin-orders-container');
-  const status = document.getElementById('admin-order-status-filter').value;
-  const search = document.getElementById('admin-order-search').value.trim();
-
-  container.innerHTML = '<p class="text-xs text-slate-400 py-6 text-center">Loading orders...</p>';
+  const status = document.getElementById('admin-order-status-filter')?.value || 'all';
+  const search = document.getElementById('admin-order-search')?.value.trim() || '';
 
   try {
-    const query = new URLSearchParams();
-    if (status !== 'all') query.append('status', status);
-    if (search) query.append('search', search);
-
-    const res = await fetch(`/api/admin/orders?${query.toString()}`, {
-      headers: { Authorization: `Bearer ${adminToken}` }
-    });
-    const data = await res.json();
-
-    if (data.success) {
-      adminOrders = data.orders;
-      renderAdminOrdersList(data.orders);
-    }
+    const orders = window.Store ? window.Store.getOrders({ status, search }) : [];
+    adminOrders = orders;
+    renderAdminOrdersList(orders);
   } catch (err) {
     console.error('Error loading orders:', err);
   }
@@ -483,14 +424,14 @@ async function loadAdminOrders() {
 
 function renderAdminOrdersList(orders) {
   const container = document.getElementById('admin-orders-container');
-  if (orders.length === 0) {
+  if (!orders || orders.length === 0) {
     container.innerHTML = '<div class="bg-white p-8 rounded-2xl border border-slate-200 text-center text-xs text-slate-500 font-medium">No orders found matching criteria.</div>';
     return;
   }
 
   container.innerHTML = orders.map(o => {
     const cleanPhone = (o.customer_phone || '').replace(/[^0-9]/g, '');
-    const waText = `Hi ${o.customer_name}, regarding your UrbanVogue order #${o.order_number}:`;
+    const waText = `Hi ${o.customer_name}, regarding your ProActive Sports order #${o.order_number}:`;
     const waLink = `https://wa.me/${cleanPhone}?text=${encodeURIComponent(waText)}`;
 
     return `
@@ -554,55 +495,37 @@ function handleAdminOrderSearch(e) {
   }, 300);
 }
 
-async function updateOrderStatusQuick(orderId, newStatus) {
+function updateOrderStatusQuick(orderId, newStatus) {
   try {
-    const res = await fetch(`/api/admin/orders/${orderId}/status`, {
-      method: 'PUT',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${adminToken}`
-      },
-      body: JSON.stringify({ order_status: newStatus })
-    });
-
-    const data = await res.json();
-    if (data.success) {
-      showAdminToast(`Order #${orderId} marked as ${newStatus}`, 'success');
-      loadDashboardStats();
-    } else {
-      showAdminToast(data.message || 'Status update failed', 'error');
-    }
+    window.Store.updateOrderStatus(orderId, newStatus);
+    showAdminToast(`Order #${orderId} marked as ${newStatus}`, 'success');
+    loadDashboardStats();
+    if (currentTab === 'orders') loadAdminOrders();
   } catch (err) {
     showAdminToast('Network error updating status', 'error');
   }
 }
 
 // 7. Store Settings Tab
-async function loadAdminSettings() {
+function loadAdminSettings() {
   try {
-    const res = await fetch('/api/admin/settings', {
-      headers: { Authorization: `Bearer ${adminToken}` }
-    });
-    const data = await res.json();
-    if (data.success && data.settings) {
-      const s = data.settings;
-      document.getElementById('set-store-name').value = s.store_name || '';
-      document.getElementById('set-store-tagline').value = s.store_tagline || '';
-      document.getElementById('set-whatsapp-number').value = s.whatsapp_number || '';
-      document.getElementById('set-store-phone').value = s.store_phone || '';
-      document.getElementById('set-store-address').value = s.store_address || '';
-      document.getElementById('set-currency-symbol').value = s.currency_symbol || '₹';
-      document.getElementById('set-shipping-fee').value = s.shipping_fee || 50;
-      document.getElementById('set-free-threshold').value = s.free_shipping_threshold || 999;
-      document.getElementById('set-announcement').value = s.announcement_bar || '';
-      document.getElementById('set-upi-id').value = s.upi_id || '';
-    }
+    const s = window.Store ? window.Store.getSettings() : {};
+    document.getElementById('set-store-name').value = s.store_name || '';
+    document.getElementById('set-store-tagline').value = s.store_tagline || '';
+    document.getElementById('set-whatsapp-number').value = s.whatsapp_number || '';
+    document.getElementById('set-store-phone').value = s.store_phone || '';
+    document.getElementById('set-store-address').value = s.store_address || '';
+    document.getElementById('set-currency-symbol').value = s.currency_symbol || '₹';
+    document.getElementById('set-shipping-fee').value = s.shipping_fee || 50;
+    document.getElementById('set-free-threshold').value = s.free_shipping_threshold || 799;
+    document.getElementById('set-announcement').value = s.announcement_bar || '';
+    document.getElementById('set-upi-id').value = s.upi_id || '';
   } catch (err) {
     console.error('Error fetching settings:', err);
   }
 }
 
-async function handleSaveSettings(event) {
+function handleSaveSettings(event) {
   event.preventDefault();
   const btn = document.getElementById('save-settings-btn');
   btn.disabled = true;
@@ -615,44 +538,43 @@ async function handleSaveSettings(event) {
     store_phone: document.getElementById('set-store-phone').value.trim(),
     store_address: document.getElementById('set-store-address').value.trim(),
     currency_symbol: document.getElementById('set-currency-symbol').value.trim(),
-    shipping_fee: document.getElementById('set-shipping-fee').value,
-    free_shipping_threshold: document.getElementById('set-free-threshold').value,
+    shipping_fee: parseFloat(document.getElementById('set-shipping-fee').value) || 50,
+    free_shipping_threshold: parseFloat(document.getElementById('set-free-threshold').value) || 799,
     announcement_bar: document.getElementById('set-announcement').value.trim(),
     upi_id: document.getElementById('set-upi-id').value.trim()
   };
 
   try {
-    const res = await fetch('/api/admin/settings', {
-      method: 'PUT',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${adminToken}`
-      },
-      body: JSON.stringify(payload)
-    });
-
-    const data = await res.json();
-    if (data.success) {
-      showAdminToast('Store settings saved successfully!', 'success');
-      document.getElementById('admin-brand-name').innerText = payload.store_name;
-    } else {
-      showAdminToast(data.message || 'Failed to save settings', 'error');
-    }
+    window.Store.saveSettings(payload);
+    showAdminToast('Store settings saved successfully!', 'success');
+    document.getElementById('admin-brand-name').innerText = payload.store_name;
   } catch (err) {
-    showAdminToast('Network error saving settings', 'error');
+    showAdminToast('Failed to save settings', 'error');
   } finally {
     btn.disabled = false;
     btn.innerText = 'Save Store Settings';
   }
 }
 
-// 8. Admin Toast
+// 8. Reset Demo Data
+function handleResetDemoData() {
+  if (confirm('Are you sure you want to reset all products, orders, and settings to original demo state?')) {
+    window.Store.resetDemoData();
+    showAdminToast('Demo data restored to defaults!', 'info');
+    loadDashboardStats();
+    loadAdminProducts();
+    loadAdminOrders();
+    loadAdminSettings();
+  }
+}
+
+// 9. Admin Toast
 function showAdminToast(message, type = 'success') {
   const container = document.getElementById('admin-toast-container');
   if (!container) return;
 
   const toast = document.createElement('div');
-  const bg = type === 'error' ? 'bg-rose-900' : (type === 'info' ? 'bg-slate-900' : 'bg-emerald-900');
+  const bg = type === 'error' ? 'bg-rose-900' : (type === 'info' ? 'bg-amber-900' : 'bg-emerald-900');
   toast.className = `toast-item flex items-center gap-2.5 px-4 py-3 rounded-2xl shadow-2xl text-xs font-bold ${bg} text-white border border-white/20`;
   toast.innerText = message;
 

@@ -59,12 +59,7 @@ A modern, mobile-first e-commerce web application built for clothing retail busi
 npm install
 ```
 
-### 2. Seed Initial Men's & Children's Catalog
-```bash
-npm run seed
-```
-
-### 3. Start the Website Server
+### 2. Start the Website Server
 ```bash
 npm start
 ```
@@ -76,18 +71,24 @@ npm start
 
 ---
 
-## 🌐 Deploying to the Live Web for Free
+## 🌐 Deploying to Render (Free & Instant)
 
-### Option A: Deploy on Render.com (Recommended Free Hosting)
-1. Push this project to a GitHub repository.
-2. Sign up for a free account at [render.com](https://render.com).
-3. Click **New +** &rarr; **Web Service** &rarr; Connect your GitHub repository.
+1. Push this project to your GitHub repository.
+2. Open [render.com](https://render.com) and click **New +** &rarr; **Web Service**.
+3. Select your repository.
 4. Set:
    - **Environment**: `Node`
-   - **Build Command**: `npm install && npm rebuild sqlite3 --build-from-source && npm run seed`
+   - **Build Command**: `npm install`
    - **Start Command**: `npm start`
-5. Click **Deploy Web Service**.
-6. Under **Custom Domains**, add your client's domain (e.g., `www.yourclothingbrand.in`) with free automatic SSL!
+5. Click **Deploy Web Service**! (Deploys in under 30 seconds with 0 errors).
+
+---
+
+## 💡 Client Interactive Testing Mode (LocalStorage Engine)
+- **Zero Native Dependencies**: No SQLite or C++ compiler required.
+- **Client Isolated Demos**: Each user/client testing the store gets their own isolated local state in their browser.
+- **Full Capabilities**: Add/edit/delete products, place WhatsApp orders, change store settings, and track orders.
+- **1-Click Reset**: Click "Reset Demo" in the admin dashboard to restore original demo products anytime.
 
 ---
 

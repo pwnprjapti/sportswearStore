@@ -1,23 +1,9 @@
-require('dotenv').config();
 const express = require('express');
 const path = require('path');
 const cors = require('cors');
-const fs = require('fs');
-
-const { initSchema } = require('./config/database');
-const productRoutes = require('./routes/productRoutes');
-const orderRoutes = require('./routes/orderRoutes');
-const adminRoutes = require('./routes/adminRoutes');
-const settingsRoutes = require('./routes/settingsRoutes');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
-
-// Ensure public/uploads directory exists
-const uploadsDir = path.join(__dirname, 'public', 'uploads');
-if (!fs.existsSync(uploadsDir)) {
-  fs.mkdirSync(uploadsDir, { recursive: true });
-}
 
 // Middleware
 app.use(cors());
@@ -26,12 +12,6 @@ app.use(express.urlencoded({ extended: true }));
 
 // Serve static frontend assets
 app.use(express.static(path.join(__dirname, 'public')));
-
-// API Endpoints
-app.use('/api/products', productRoutes);
-app.use('/api/orders', orderRoutes);
-app.use('/api/admin', adminRoutes);
-app.use('/api/settings', settingsRoutes);
 
 // Admin portal route
 app.get('/admin', (req, res) => {
@@ -43,21 +23,21 @@ app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
-// Start Server
-async function startServer() {
-  try {
-    await initSchema();
-    app.listen(PORT, () => {
-      console.log(`\n======================================================`);
-      console.log(`🛍️  CLOTHING E-COMMERCE SERVER RUNNING`);
-      console.log(`🌐 Storefront: http://localhost:${PORT}`);
-      console.log(`🔐 Admin Panel: http://localhost:${PORT}/admin`);
-      console.log(`======================================================\n`);
-    });
-  } catch (err) {
-    console.error('Failed to initialize server:', err);
-    process.exit(1);
-  }
-}
+// Health check endpoint for Render
+app.get('/api/health', (req, res) => {
+  res.json({ status: 'ok', mode: 'localstorage-demo' });
+});
 
-startServer();
+// Fallback for SPA routing
+app.use((req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'index.html'));
+});
+
+app.listen(PORT, () => {
+  console.log(`\n======================================================`);
+  console.log(`🛍️  SPORTSWEAR DEMO STORE RUNNING (LocalStorage Mode)`);
+  console.log(`🌐 Storefront: http://localhost:${PORT}`);
+  console.log(`🔐 Admin Panel: http://localhost:${PORT}/admin`);
+  console.log(`💡 Zero Database Dependencies | Ready for Render & Client Demos`);
+  console.log(`======================================================\n`);
+});

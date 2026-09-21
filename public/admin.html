@@ -111,9 +111,14 @@
 
           <!-- Quick Actions -->
           <div class="flex items-center gap-2 sm:gap-3">
+            <button onclick="handleResetDemoData()" class="text-xs font-bold text-amber-700 hover:text-amber-800 bg-amber-50 hover:bg-amber-100 border border-amber-300 px-3 py-2 rounded-xl flex items-center gap-1.5 transition-colors" title="Reset all products and orders to original demo state">
+              <i data-lucide="rotate-ccw" class="w-3.5 h-3.5"></i>
+              <span class="hidden sm:inline">Reset Demo</span>
+            </button>
+
             <a href="/" target="_blank" class="text-xs font-bold text-slate-700 hover:text-slate-950 px-3 py-2 rounded-xl border border-slate-200 hover:bg-slate-50 flex items-center gap-1.5 transition-colors">
               <i data-lucide="external-link" class="w-3.5 h-3.5"></i>
-              <span class="hidden sm:inline">View Storefront</span>
+              <span class="hidden sm:inline">View Store</span>
             </a>
             
             <button onclick="handleLogout()" class="text-xs font-bold text-rose-600 hover:text-rose-700 px-3 py-2 rounded-xl border border-rose-200 hover:bg-rose-50 flex items-center gap-1.5 transition-colors">
@@ -469,6 +474,8 @@
   <!-- Toast Container -->
   <div id="admin-toast-container" class="toast-container"></div>
 
+  <!-- Client-Side LocalStorage Data Engine -->
+  <script src="/js/store.js"></script>
   <!-- Admin Script -->
   <script src="/js/admin.js"></script>
 </body>

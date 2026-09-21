@@ -48,12 +48,9 @@ document.addEventListener('DOMContentLoaded', async () => {
 // 1. Store Settings
 async function loadStoreSettings() {
   try {
-    const res = await fetch('/api/settings');
-    const data = await res.json();
-    if (data.success && data.settings) {
-      storeSettings = { ...storeSettings, ...data.settings };
-      applyStoreSettings();
-    }
+    const s = window.Store ? window.Store.getSettings() : storeSettings;
+    storeSettings = { ...storeSettings, ...s };
+    applyStoreSettings();
   } catch (err) {
     console.warn('Using default Cultstore settings:', err);
   }
@@ -67,54 +64,35 @@ function applyStoreSettings() {
 
   const floatWa = document.getElementById('floating-whatsapp');
   if (floatWa && storeSettings.whatsapp_number) {
-    floatWa.href = `https://wa.me/${storeSettings.whatsapp_number.replace(/[^0-9]/g, '')}?text=${encodeURIComponent('Hi Cult.Sport, I want to inquire about sports wear!')}`;
+    floatWa.href = `https://wa.me/${storeSettings.whatsapp_number.replace(/[^0-9]/g, '')}?text=${encodeURIComponent('Hi ProActive Sports, I want to inquire about sports wear!')}`;
   }
 }
 
 // 2. Fetch Categories
 async function loadCategories() {
   try {
-    const res = await fetch('/api/products/categories');
-    const data = await res.json();
-    if (data.success) {
-      allCategories = data.categories;
+    if (window.Store) {
+      allCategories = window.Store.getCategories();
     }
   } catch (err) {
     console.error('Error fetching categories:', err);
   }
 }
 
-// 3. Load Products from API
+// 3. Load Products from LocalStorage Store
 async function loadProducts() {
   const grid = document.getElementById('products-grid');
   const emptyState = document.getElementById('empty-state');
   const countPill = document.getElementById('product-count-pill');
   if (!grid) return;
 
-  grid.innerHTML = `
-    <div class="col-span-full py-16 flex flex-col items-center justify-center text-slate-400">
-      <div class="w-7 h-7 border-3 border-slate-300 border-t-rose-500 rounded-full animate-spin mb-3"></div>
-      <p class="text-xs font-black uppercase tracking-wider text-slate-600">Loading Cult Activewear...</p>
-    </div>
-  `;
-
   try {
-    const query = new URLSearchParams();
-    if (currentFilters.category !== 'all') query.append('category', currentFilters.category);
-    if (currentFilters.subcategory) query.append('subcategory', currentFilters.subcategory);
-    if (currentFilters.size) query.append('size', currentFilters.size);
-    if (currentFilters.sort) query.append('sort', currentFilters.sort);
-    if (currentFilters.search) query.append('search', currentFilters.search);
-    if (currentFilters.featured) query.append('featured', currentFilters.featured);
-    if (currentFilters.bestseller) query.append('bestseller', currentFilters.bestseller);
+    const prods = window.Store ? window.Store.getProducts(currentFilters) : [];
 
-    const res = await fetch(`/api/products?${query.toString()}`);
-    const data = await res.json();
-
-    if (data.success && data.products.length > 0) {
-      allProducts = data.products;
-      if (countPill) countPill.innerText = `${data.products.length} Items`;
-      renderProductGrid(data.products);
+    if (prods && prods.length > 0) {
+      allProducts = prods;
+      if (countPill) countPill.innerText = `${prods.length} Items`;
+      renderProductGrid(prods);
       if (emptyState) emptyState.classList.add('hidden');
       grid.classList.remove('hidden');
     } else {
@@ -213,12 +191,9 @@ function prevHeroSlide() {
 // ==========================================
 async function loadFeaturedRails() {
   try {
-    const res = await fetch('/api/products');
-    const data = await res.json();
-    if (data.success && data.products) {
-      masterProducts = data.products;
-      renderSlidingRails(data.products);
-    }
+    const prods = window.Store ? window.Store.getProducts() : [];
+    masterProducts = prods;
+    renderSlidingRails(prods);
   } catch (err) {
     console.error('Error loading sliding rails:', err);
   }
@@ -722,21 +697,16 @@ async function handleCheckoutSubmit(event) {
   const paymentMethod = document.querySelector('input[name="payment_method"]:checked')?.value || 'whatsapp';
 
   try {
-    const res = await fetch('/api/orders/checkout', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        customer_name: name,
-        customer_phone: phone,
-        shipping_address: address,
-        city,
-        pincode,
-        items: cart,
-        payment_method: paymentMethod
-      })
+    const data = window.Store.createOrder({
+      customer_name: name,
+      customer_phone: phone,
+      shipping_address: address,
+      city,
+      pincode,
+      items: cart,
+      payment_method: paymentMethod
     });
 
-    const data = await res.json();
     if (data.success && data.order) {
       cart = [];
       saveCart();
@@ -758,37 +728,12 @@ async function handleCheckoutSubmit(event) {
         }
       }
 
-      if (paymentMethod === 'razorpay' && window.Razorpay && storeSettings.razorpay_key_id) {
-        const options = {
-          key: storeSettings.razorpay_key_id,
-          amount: Math.round(data.order.total_amount * 100),
-          currency: 'INR',
-          name: storeSettings.store_name || 'Cult.Sport Activewear',
-          description: `Order #${data.order.order_number}`,
-          handler: function (rzpRes) {
-            showToast('Payment Successful! ID: ' + (rzpRes.razorpay_payment_id || ''));
-            document.getElementById('order-success-modal').classList.remove('hidden');
-          },
-          prefill: {
-            name: data.order.customer_name,
-            contact: data.order.customer_phone
-          },
-          theme: { color: '#111111' }
-        };
-        try {
-          const rzp = new Razorpay(options);
-          rzp.open();
-        } catch (e) {
-          document.getElementById('order-success-modal').classList.remove('hidden');
-        }
-      } else {
-        document.getElementById('order-success-modal').classList.remove('hidden');
-      }
+      document.getElementById('order-success-modal').classList.remove('hidden');
     } else {
       showToast(data.message || 'Order failed', 'error');
     }
   } catch (err) {
-    showToast('Network error', 'error');
+    showToast('Error creating order', 'error');
   } finally {
     submitBtn.disabled = false;
     submitBtn.innerText = 'CONFIRM ORDER';
@@ -817,28 +762,21 @@ async function handleTrackOrder() {
     return;
   }
 
-  resultsContainer.innerHTML = '<p class="text-xs text-slate-500">Searching...</p>';
+  const orders = window.Store ? window.Store.trackOrder(query) : [];
 
-  try {
-    const res = await fetch(`/api/orders/track?query=${encodeURIComponent(query)}`);
-    const data = await res.json();
-
-    if (data.success && data.orders && data.orders.length > 0) {
-      const curr = storeSettings.currency_symbol || '₹';
-      resultsContainer.innerHTML = data.orders.map(o => `
-        <div class="p-3 bg-slate-50 rounded-xl border border-slate-200 text-xs space-y-1">
-          <div class="flex justify-between font-black">
-            <span>#${o.order_number}</span>
-            <span class="text-rose-500 uppercase">${o.order_status}</span>
-          </div>
-          <p class="text-slate-600">Total: <strong>${curr}${o.total_amount}</strong></p>
+  if (orders && orders.length > 0) {
+    const curr = storeSettings.currency_symbol || '₹';
+    resultsContainer.innerHTML = orders.map(o => `
+      <div class="p-3 bg-slate-50 rounded-xl border border-slate-200 text-xs space-y-1">
+        <div class="flex justify-between font-black">
+          <span>#${o.order_number}</span>
+          <span class="text-rose-500 uppercase">${o.order_status}</span>
         </div>
-      `).join('');
-    } else {
-      resultsContainer.innerHTML = '<p class="text-xs text-slate-500">No Cult.Sport orders found.</p>';
-    }
-  } catch (err) {
-    resultsContainer.innerHTML = '<p class="text-xs text-rose-500">Error tracking order.</p>';
+        <p class="text-slate-600">Total: <strong>${curr}${o.total_amount}</strong></p>
+      </div>
+    `).join('');
+  } else {
+    resultsContainer.innerHTML = '<p class="text-xs text-slate-500">No matching orders found.</p>';
   }
 }
 
