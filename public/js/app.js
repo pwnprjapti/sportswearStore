@@ -236,7 +236,13 @@ function prevHeroSlide() {
 window.__isDraggingRail = false;
 
 function handleRailCardClick(event, productId) {
-  if (window.__isDraggingRail) {
+  const menTrack = document.getElementById('trending-men-slider');
+  const kidsTrack = document.getElementById('popular-kids-slider');
+  const isDragging = window.__isDraggingRail ||
+    (menTrack && (menTrack.dataset.dragged === 'true' || menTrack.classList.contains('is-dragging'))) ||
+    (kidsTrack && (kidsTrack.dataset.dragged === 'true' || kidsTrack.classList.contains('is-dragging')));
+
+  if (isDragging) {
     if (event) {
       event.preventDefault();
       event.stopPropagation();
@@ -248,7 +254,13 @@ function handleRailCardClick(event, productId) {
 
 function handleRailAddClick(event, productId) {
   if (event) event.stopPropagation();
-  if (window.__isDraggingRail) {
+  const menTrack = document.getElementById('trending-men-slider');
+  const kidsTrack = document.getElementById('popular-kids-slider');
+  const isDragging = window.__isDraggingRail ||
+    (menTrack && (menTrack.dataset.dragged === 'true' || menTrack.classList.contains('is-dragging'))) ||
+    (kidsTrack && (kidsTrack.dataset.dragged === 'true' || kidsTrack.classList.contains('is-dragging')));
+
+  if (isDragging) {
     if (event) event.preventDefault();
     return;
   }
@@ -354,18 +366,36 @@ function initRailDraggable(sliderId) {
   if (!slider || slider.dataset.railInit === 'true') return;
   slider.dataset.railInit = 'true';
 
+  let isTouchActive = false;
+  let isMouseActive = false;
   let hasMoved = false;
-  let isPointerDown = false;
-  let mouseStartX = 0;
-  let mouseStartScroll = 0;
-  let mouseVelocity = 0;
-  let mouseLastX = 0;
-  let mouseLastTime = 0;
+  let startX = 0;
+  let startY = 0;
+  let startScrollLeft = 0;
+  let isHorizontal = null; // null = undecided, true = horizontal swipe, false = vertical scroll
+  let lastX = 0;
+  let lastTime = 0;
+  let velocity = 0;
   let resetDragTimeout = null;
+
+  function markDragging() {
+    hasMoved = true;
+    slider.dataset.dragged = 'true';
+    window.__isDraggingRail = true;
+  }
+
+  function clearDraggingLater(delay = 250) {
+    if (resetDragTimeout) clearTimeout(resetDragTimeout);
+    resetDragTimeout = setTimeout(() => {
+      slider.dataset.dragged = 'false';
+      window.__isDraggingRail = false;
+      hasMoved = false;
+    }, delay);
+  }
 
   // Intercept any click during or immediately following a swipe or drag
   slider.addEventListener('click', (e) => {
-    if (window.__isDraggingRail || slider.dataset.dragged === 'true') {
+    if (window.__isDraggingRail || slider.dataset.dragged === 'true' || hasMoved) {
       e.preventDefault();
       e.stopPropagation();
       e.stopImmediatePropagation();
@@ -373,121 +403,152 @@ function initRailDraggable(sliderId) {
     }
   }, true); // Capture phase
 
-  // ==========================================
-  // MOBILE TOUCH: 100% UNLOCKED NATIVE SWIPING
-  // ==========================================
-  let touchStartX = 0;
-  let touchStartY = 0;
-
-  // Native scroll listener detects any horizontal movement
+  // Native scroll listener keeps state synced
   slider.addEventListener('scroll', () => {
     slider.dataset.dragged = 'true';
     window.__isDraggingRail = true;
     if (resetDragTimeout) clearTimeout(resetDragTimeout);
     resetDragTimeout = setTimeout(() => {
-      slider.dataset.dragged = 'false';
-      window.__isDraggingRail = false;
-    }, 150);
+      if (!isTouchActive && !isMouseActive) {
+        slider.dataset.dragged = 'false';
+        window.__isDraggingRail = false;
+      }
+    }, 180);
   }, { passive: true });
 
+  // ==========================================
+  // MOBILE TOUCH: DIRECT & FLUID SWIPING
+  // ==========================================
   slider.addEventListener('touchstart', (e) => {
     if (e.touches.length > 1) return;
-    touchStartX = e.touches[0].clientX;
-    touchStartY = e.touches[0].clientY;
+    const touch = e.touches[0];
+    isTouchActive = true;
     hasMoved = false;
+    isHorizontal = null;
+    startX = touch.clientX;
+    startY = touch.clientY;
+    startScrollLeft = slider.scrollLeft;
+    lastX = touch.clientX;
+    lastTime = Date.now();
+    velocity = 0;
+
+    // Temporarily disable snap during active finger drag for 1:1 response
+    slider.style.scrollSnapType = 'none';
+    slider.style.scrollBehavior = 'auto';
   }, { passive: true });
 
   slider.addEventListener('touchmove', (e) => {
-    if (e.touches.length > 1) return;
-    const diffX = Math.abs(e.touches[0].clientX - touchStartX);
-    if (diffX > 8) {
-      hasMoved = true;
-      slider.dataset.dragged = 'true';
-      window.__isDraggingRail = true;
-    }
-  }, { passive: true });
+    if (!isTouchActive || e.touches.length > 1) return;
+    const touch = e.touches[0];
+    const deltaX = touch.clientX - startX;
+    const deltaY = touch.clientY - startY;
 
-  slider.addEventListener('touchend', () => {
-    if (hasMoved) {
-      if (resetDragTimeout) clearTimeout(resetDragTimeout);
-      resetDragTimeout = setTimeout(() => {
-        slider.dataset.dragged = 'false';
-        window.__isDraggingRail = false;
-      }, 150);
+    if (isHorizontal === null) {
+      const absX = Math.abs(deltaX);
+      const absY = Math.abs(deltaY);
+      if (absX > 5 || absY > 5) {
+        isHorizontal = absX >= absY;
+      }
+    }
+
+    if (isHorizontal) {
+      if (e.cancelable) e.preventDefault();
+      markDragging();
+
+      // Fluid 1:1 real-time drag following finger (left to right & right to left)
+      slider.scrollLeft = startScrollLeft - deltaX;
+
+      const now = Date.now();
+      const dt = now - lastTime;
+      if (dt > 0) {
+        velocity = (touch.clientX - lastX) / dt;
+      }
+      lastX = touch.clientX;
+      lastTime = now;
+    }
+  }, { passive: false });
+
+  const handleTouchEnd = () => {
+    if (!isTouchActive) return;
+    isTouchActive = false;
+
+    // Restore snap
+    slider.style.scrollSnapType = '';
+    slider.style.scrollBehavior = '';
+
+    if (isHorizontal && hasMoved) {
+      // Momentum glide on swipe release
+      if (Math.abs(velocity) > 0.2) {
+        const momentum = velocity * 220;
+        slider.scrollBy({ left: -momentum, behavior: 'smooth' });
+      }
+      clearDraggingLater(250);
     } else {
       slider.dataset.dragged = 'false';
       window.__isDraggingRail = false;
+      hasMoved = false;
     }
-  }, { passive: true });
+    isHorizontal = null;
+  };
 
-  slider.addEventListener('touchcancel', () => {
-    slider.dataset.dragged = 'false';
-    window.__isDraggingRail = false;
-  }, { passive: true });
+  slider.addEventListener('touchend', handleTouchEnd, { passive: true });
+  slider.addEventListener('touchcancel', handleTouchEnd, { passive: true });
 
   // ==========================================
   // DESKTOP: MOUSE CLICK & DRAG TO SWIPE
   // ==========================================
   slider.addEventListener('mousedown', (e) => {
     if (e.button !== 0) return; // Left click only
-    isPointerDown = true;
+    isMouseActive = true;
     hasMoved = false;
-    slider.dataset.dragged = 'false';
-    mouseStartX = e.pageX - slider.offsetLeft;
-    mouseStartScroll = slider.scrollLeft;
-    mouseLastX = e.pageX;
-    mouseLastTime = Date.now();
-    mouseVelocity = 0;
+    startX = e.pageX;
+    startScrollLeft = slider.scrollLeft;
+    lastX = e.pageX;
+    lastTime = Date.now();
+    velocity = 0;
 
     slider.classList.add('is-dragging');
     slider.style.cursor = 'grabbing';
+    slider.style.scrollSnapType = 'none';
     slider.style.scrollBehavior = 'auto';
   });
 
   window.addEventListener('mousemove', (e) => {
-    if (!isPointerDown) return;
-    const x = e.pageX - slider.offsetLeft;
-    const walk = x - mouseStartX;
-    if (Math.abs(walk) > 5) {
-      hasMoved = true;
-      slider.dataset.dragged = 'true';
-      window.__isDraggingRail = true;
+    if (!isMouseActive) return;
+    const deltaX = e.pageX - startX;
+    if (Math.abs(deltaX) > 4) {
+      markDragging();
     }
 
     if (hasMoved) {
       e.preventDefault();
-      slider.scrollLeft = mouseStartScroll - walk;
+      slider.scrollLeft = startScrollLeft - deltaX;
 
       const now = Date.now();
-      const dt = now - mouseLastTime;
+      const dt = now - lastTime;
       if (dt > 0) {
-        mouseVelocity = (e.pageX - mouseLastX) / dt;
+        velocity = (e.pageX - lastX) / dt;
       }
-      mouseLastX = e.pageX;
-      mouseLastTime = now;
+      lastX = e.pageX;
+      lastTime = now;
     }
   });
 
   window.addEventListener('mouseup', () => {
-    if (!isPointerDown) return;
-    isPointerDown = false;
+    if (!isMouseActive) return;
+    isMouseActive = false;
 
     slider.classList.remove('is-dragging');
     slider.style.cursor = 'grab';
+    slider.style.scrollSnapType = '';
     slider.style.scrollBehavior = '';
 
-    // Inertial glide on mouse release
-    if (Math.abs(mouseVelocity) > 0.2) {
-      const momentum = mouseVelocity * 220;
-      slider.scrollBy({ left: -momentum, behavior: 'smooth' });
-    }
-
     if (hasMoved) {
-      if (resetDragTimeout) clearTimeout(resetDragTimeout);
-      resetDragTimeout = setTimeout(() => {
-        slider.dataset.dragged = 'false';
-        window.__isDraggingRail = false;
-      }, 150);
+      if (Math.abs(velocity) > 0.2) {
+        const momentum = velocity * 220;
+        slider.scrollBy({ left: -momentum, behavior: 'smooth' });
+      }
+      clearDraggingLater(250);
     } else {
       slider.dataset.dragged = 'false';
       window.__isDraggingRail = false;
