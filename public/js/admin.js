@@ -92,9 +92,9 @@ function switchTab(tabName) {
   // Update tab buttons
   document.querySelectorAll('.admin-tab-btn').forEach(btn => {
     if (btn.dataset.tab === tabName) {
-      btn.className = 'admin-tab-btn active px-4 py-2 rounded-xl text-xs sm:text-sm font-bold transition-all bg-slate-900 text-white shadow-sm flex items-center gap-2';
+      btn.className = 'admin-tab-btn active px-3.5 sm:px-4 py-2 rounded-xl text-xs sm:text-sm font-bold transition-all bg-slate-900 text-white shadow-xs flex items-center gap-1.5 whitespace-nowrap flex-shrink-0';
     } else {
-      btn.className = 'admin-tab-btn px-4 py-2 rounded-xl text-xs sm:text-sm font-bold transition-all bg-white text-slate-600 hover:bg-slate-50 border border-slate-200 flex items-center gap-2';
+      btn.className = 'admin-tab-btn px-3.5 sm:px-4 py-2 rounded-xl text-xs sm:text-sm font-bold transition-all bg-white text-slate-600 hover:bg-slate-50 border border-slate-200 flex items-center gap-1.5 whitespace-nowrap flex-shrink-0';
     }
   });
 
@@ -585,3 +585,22 @@ function showAdminToast(message, type = 'success') {
     setTimeout(() => toast.remove(), 300);
   }, 3000);
 }
+
+// Window scope exposures
+window.handleAdminLogin = handleAdminLogin;
+window.handleLogout = handleLogout;
+window.switchTab = switchTab;
+window.handleResetDemoData = handleResetDemoData;
+window.handleAdminProductSearch = handleAdminProductSearch;
+window.loadAdminProducts = loadAdminProducts;
+window.openProductEditModal = openProductEditModal;
+window.closeProductEditModal = closeProductEditModal;
+window.handleDepartmentChange = handleDepartmentChange;
+window.setPresetSizes = setPresetSizes;
+window.handleSaveProduct = handleSaveProduct;
+window.deleteProduct = deleteProduct;
+window.handleAdminOrderSearch = handleAdminOrderSearch;
+window.loadAdminOrders = loadAdminOrders;
+window.updateOrderStatusQuick = updateOrderStatusQuick;
+window.handleSaveSettings = handleSaveSettings;
+window.showAdminToast = showAdminToast;

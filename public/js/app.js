@@ -124,27 +124,70 @@ function initHeroSlider() {
   container.addEventListener('mouseenter', stopHeroAutoPlay);
   container.addEventListener('mouseleave', startHeroAutoPlay);
 
-  // Touch swipe support (mobile / tablet)
-  let touchStartX = 0;
-  let touchEndX = 0;
+  // Real-time responsive touch drag engine (mobile / tablet)
+  let startX = 0;
+  let startY = 0;
+  let currentX = 0;
+  let isDragging = false;
+  let isHorizontal = null;
 
   container.addEventListener('touchstart', (e) => {
-    touchStartX = e.changedTouches[0].screenX;
+    if (e.touches.length > 1) return;
+    startX = e.touches[0].clientX;
+    startY = e.touches[0].clientY;
+    currentX = startX;
+    isDragging = true;
+    isHorizontal = null;
     stopHeroAutoPlay();
+    track.style.transition = 'none';
   }, { passive: true });
 
-  container.addEventListener('touchend', (e) => {
-    touchEndX = e.changedTouches[0].screenX;
-    const diff = touchEndX - touchStartX;
-    if (Math.abs(diff) > 40) {
-      if (diff < 0) {
-        nextHeroSlide();
-      } else {
-        prevHeroSlide();
+  container.addEventListener('touchmove', (e) => {
+    if (!isDragging) return;
+    currentX = e.touches[0].clientX;
+    const deltaX = currentX - startX;
+    const deltaY = e.touches[0].clientY - startY;
+
+    if (isHorizontal === null) {
+      if (Math.abs(deltaX) > 6 || Math.abs(deltaY) > 6) {
+        isHorizontal = Math.abs(deltaX) > Math.abs(deltaY);
       }
     }
-    startHeroAutoPlay();
+
+    if (isHorizontal) {
+      // Follow finger in real-time
+      track.style.transform = `translateX(calc(-${currentHeroSlide * 100}% + ${deltaX}px))`;
+    }
   }, { passive: true });
+
+  const handleTouchEnd = () => {
+    if (!isDragging) return;
+    isDragging = false;
+    track.style.transition = 'transform 0.4s cubic-bezier(0.22, 1, 0.36, 1)';
+
+    if (isHorizontal) {
+      const deltaX = currentX - startX;
+      const threshold = Math.min(container.clientWidth * 0.18, 70); // 18% or 70px
+      if (deltaX < -threshold) {
+        nextHeroSlide();
+      } else if (deltaX > threshold) {
+        prevHeroSlide();
+      } else {
+        setHeroSlide(currentHeroSlide);
+      }
+    } else {
+      setHeroSlide(currentHeroSlide);
+    }
+    startHeroAutoPlay();
+  };
+
+  container.addEventListener('touchend', handleTouchEnd, { passive: true });
+  container.addEventListener('touchcancel', handleTouchEnd, { passive: true });
+
+  // Keep carousel aligned on screen resize / phone orientation change
+  window.addEventListener('resize', () => {
+    setHeroSlide(currentHeroSlide);
+  });
 }
 
 function startHeroAutoPlay() {
@@ -165,6 +208,7 @@ function setHeroSlide(index) {
   const track = document.getElementById('hero-slider-track');
   if (!track) return;
 
+  track.style.transition = 'transform 0.4s cubic-bezier(0.22, 1, 0.36, 1)';
   currentHeroSlide = (index + totalHeroSlides) % totalHeroSlides;
   track.style.transform = `translateX(-${currentHeroSlide * 100}%)`;
 
@@ -189,6 +233,31 @@ function prevHeroSlide() {
 // ==========================================
 // CULTSTORE HORIZONTAL SLIDING PRODUCT RAILS
 // ==========================================
+window.__isDraggingRail = false;
+
+function handleRailCardClick(event, productId) {
+  if (window.__isDraggingRail) {
+    if (event) {
+      event.preventDefault();
+      event.stopPropagation();
+    }
+    return;
+  }
+  openProductModal(productId);
+}
+
+function handleRailAddClick(event, productId) {
+  if (event) event.stopPropagation();
+  if (window.__isDraggingRail) {
+    if (event) event.preventDefault();
+    return;
+  }
+  quickAddToCart(productId);
+}
+
+window.handleRailCardClick = handleRailCardClick;
+window.handleRailAddClick = handleRailAddClick;
+
 async function loadFeaturedRails() {
   try {
     const prods = window.Store ? window.Store.getProducts() : [];
@@ -207,11 +276,13 @@ function renderSlidingRails(products) {
   if (menTrack) {
     const menProducts = products.filter(p => p.category === 'men');
     menTrack.innerHTML = menProducts.map((prod, idx) => createRailCardHtml(prod, idx, curr)).join('');
+    initRailDraggable('trending-men-slider');
   }
 
   if (kidsTrack) {
     const kidsProducts = products.filter(p => p.category === 'kids');
     kidsTrack.innerHTML = kidsProducts.map((prod, idx) => createRailCardHtml(prod, idx, curr)).join('');
+    initRailDraggable('popular-kids-slider');
   }
 
   if (window.lucide) lucide.createIcons();
@@ -232,7 +303,7 @@ function createRailCardHtml(prod, idx, curr) {
   const categoryTag = prod.category === 'men' ? 'MEN' : 'KIDS';
 
   return `
-    <div class="rail-product-card cult-card group cursor-pointer" onclick="openProductModal(${prod.id})">
+    <div class="rail-product-card cult-card group cursor-pointer" onclick="handleRailCardClick(event, ${prod.id})">
       <div class="cult-card-img">
         ${discountBadge}
         <div class="badge-rating absolute bottom-2 left-2 z-10">
@@ -243,6 +314,7 @@ function createRailCardHtml(prod, idx, curr) {
           src="${prod.image_url}"
           alt="${prod.title}"
           loading="lazy"
+          draggable="false"
           onerror="this.src='https://images.unsplash.com/photo-1581009146145-b5ef050c2e1e?auto=format&fit=crop&w=600&q=80'"
         />
       </div>
@@ -264,8 +336,9 @@ function createRailCardHtml(prod, idx, curr) {
           </div>
 
           <button
-            onclick="event.stopPropagation(); quickAddToCart(${prod.id})"
-            class="w-full mt-2 py-1.5 bg-slate-100 hover:bg-black hover:text-white text-slate-900 text-xs font-bold rounded-lg transition-all flex items-center justify-center gap-1"
+            type="button"
+            onclick="handleRailAddClick(event, ${prod.id})"
+            class="w-full mt-2 py-2 bg-slate-100 hover:bg-black hover:text-white active:bg-black active:text-white text-slate-900 text-xs font-bold rounded-xl transition-all flex items-center justify-center gap-1 min-h-[36px] active:scale-95 shadow-2xs"
           >
             <i data-lucide="plus" class="w-3.5 h-3.5"></i>
             <span>Add</span>
@@ -276,10 +349,160 @@ function createRailCardHtml(prod, idx, curr) {
   `;
 }
 
+function initRailDraggable(sliderId) {
+  const slider = document.getElementById(sliderId);
+  if (!slider || slider.dataset.railInit === 'true') return;
+  slider.dataset.railInit = 'true';
+
+  let hasMoved = false;
+  let isPointerDown = false;
+  let mouseStartX = 0;
+  let mouseStartScroll = 0;
+  let mouseVelocity = 0;
+  let mouseLastX = 0;
+  let mouseLastTime = 0;
+  let resetDragTimeout = null;
+
+  // Intercept any click during or immediately following a swipe or drag
+  slider.addEventListener('click', (e) => {
+    if (window.__isDraggingRail || slider.dataset.dragged === 'true') {
+      e.preventDefault();
+      e.stopPropagation();
+      e.stopImmediatePropagation();
+      return false;
+    }
+  }, true); // Capture phase
+
+  // ==========================================
+  // MOBILE TOUCH: 100% UNLOCKED NATIVE SWIPING
+  // ==========================================
+  let touchStartX = 0;
+  let touchStartY = 0;
+
+  // Native scroll listener detects any horizontal movement
+  slider.addEventListener('scroll', () => {
+    slider.dataset.dragged = 'true';
+    window.__isDraggingRail = true;
+    if (resetDragTimeout) clearTimeout(resetDragTimeout);
+    resetDragTimeout = setTimeout(() => {
+      slider.dataset.dragged = 'false';
+      window.__isDraggingRail = false;
+    }, 150);
+  }, { passive: true });
+
+  slider.addEventListener('touchstart', (e) => {
+    if (e.touches.length > 1) return;
+    touchStartX = e.touches[0].clientX;
+    touchStartY = e.touches[0].clientY;
+    hasMoved = false;
+  }, { passive: true });
+
+  slider.addEventListener('touchmove', (e) => {
+    if (e.touches.length > 1) return;
+    const diffX = Math.abs(e.touches[0].clientX - touchStartX);
+    if (diffX > 8) {
+      hasMoved = true;
+      slider.dataset.dragged = 'true';
+      window.__isDraggingRail = true;
+    }
+  }, { passive: true });
+
+  slider.addEventListener('touchend', () => {
+    if (hasMoved) {
+      if (resetDragTimeout) clearTimeout(resetDragTimeout);
+      resetDragTimeout = setTimeout(() => {
+        slider.dataset.dragged = 'false';
+        window.__isDraggingRail = false;
+      }, 150);
+    } else {
+      slider.dataset.dragged = 'false';
+      window.__isDraggingRail = false;
+    }
+  }, { passive: true });
+
+  slider.addEventListener('touchcancel', () => {
+    slider.dataset.dragged = 'false';
+    window.__isDraggingRail = false;
+  }, { passive: true });
+
+  // ==========================================
+  // DESKTOP: MOUSE CLICK & DRAG TO SWIPE
+  // ==========================================
+  slider.addEventListener('mousedown', (e) => {
+    if (e.button !== 0) return; // Left click only
+    isPointerDown = true;
+    hasMoved = false;
+    slider.dataset.dragged = 'false';
+    mouseStartX = e.pageX - slider.offsetLeft;
+    mouseStartScroll = slider.scrollLeft;
+    mouseLastX = e.pageX;
+    mouseLastTime = Date.now();
+    mouseVelocity = 0;
+
+    slider.classList.add('is-dragging');
+    slider.style.cursor = 'grabbing';
+    slider.style.scrollBehavior = 'auto';
+  });
+
+  window.addEventListener('mousemove', (e) => {
+    if (!isPointerDown) return;
+    const x = e.pageX - slider.offsetLeft;
+    const walk = x - mouseStartX;
+    if (Math.abs(walk) > 5) {
+      hasMoved = true;
+      slider.dataset.dragged = 'true';
+      window.__isDraggingRail = true;
+    }
+
+    if (hasMoved) {
+      e.preventDefault();
+      slider.scrollLeft = mouseStartScroll - walk;
+
+      const now = Date.now();
+      const dt = now - mouseLastTime;
+      if (dt > 0) {
+        mouseVelocity = (e.pageX - mouseLastX) / dt;
+      }
+      mouseLastX = e.pageX;
+      mouseLastTime = now;
+    }
+  });
+
+  window.addEventListener('mouseup', () => {
+    if (!isPointerDown) return;
+    isPointerDown = false;
+
+    slider.classList.remove('is-dragging');
+    slider.style.cursor = 'grab';
+    slider.style.scrollBehavior = '';
+
+    // Inertial glide on mouse release
+    if (Math.abs(mouseVelocity) > 0.2) {
+      const momentum = mouseVelocity * 220;
+      slider.scrollBy({ left: -momentum, behavior: 'smooth' });
+    }
+
+    if (hasMoved) {
+      if (resetDragTimeout) clearTimeout(resetDragTimeout);
+      resetDragTimeout = setTimeout(() => {
+        slider.dataset.dragged = 'false';
+        window.__isDraggingRail = false;
+      }, 150);
+    } else {
+      slider.dataset.dragged = 'false';
+      window.__isDraggingRail = false;
+    }
+  });
+}
+
 function scrollRail(sliderId, direction) {
   const slider = document.getElementById(sliderId);
   if (!slider) return;
-  const scrollAmount = 260 * direction;
+  const firstCard = slider.querySelector('.rail-product-card');
+  const cardWidth = firstCard ? firstCard.getBoundingClientRect().width : (window.innerWidth < 640 ? 165 : 240);
+  const gap = window.innerWidth < 640 ? 12 : 16;
+  const cardsToScroll = window.innerWidth < 640 ? 1.3 : 2.5;
+  const scrollAmount = Math.round((cardWidth + gap) * cardsToScroll) * direction;
   slider.scrollBy({ left: scrollAmount, behavior: 'smooth' });
 }
 
@@ -288,6 +511,7 @@ window.setHeroSlide = setHeroSlide;
 window.nextHeroSlide = nextHeroSlide;
 window.prevHeroSlide = prevHeroSlide;
 window.scrollRail = scrollRail;
+window.initRailDraggable = initRailDraggable;
 
 // 4. Render Simple, Clean Cult.Sport Product Cards
 function renderProductGrid(products) {
@@ -343,14 +567,14 @@ function renderProductGrid(products) {
           </div>
 
           <!-- Price -->
-          <div class="flex items-baseline gap-1.5 pt-1">
+          <div class="flex flex-wrap items-baseline gap-x-1.5 gap-y-0.5 pt-1">
             <span class="text-xs sm:text-sm font-black text-slate-900">${curr}${prod.price}</span>
             ${prod.original_price ? `<span class="text-[10px] text-slate-400 line-through">${curr}${prod.original_price}</span>` : ''}
             <span class="text-[10px] font-bold text-rose-500">(${pctOff}% OFF)</span>
           </div>
 
           <!-- Button -->
-          <button onclick="event.stopPropagation(); quickAddToCart(${prod.id})" class="w-full py-1.5 mt-1 bg-slate-100 hover:bg-black hover:text-white text-slate-900 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-1">
+          <button type="button" onclick="event.stopPropagation(); quickAddToCart(${prod.id})" class="w-full py-2 mt-1.5 bg-slate-100 hover:bg-black hover:text-white active:bg-black active:text-white text-slate-900 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1 min-h-[36px] active:scale-95 shadow-2xs">
             <i data-lucide="plus" class="w-3.5 h-3.5"></i>
             <span>Add</span>
           </button>
@@ -365,6 +589,7 @@ function renderProductGrid(products) {
 
 // 5. Product Detail Modal
 function openProductModal(productId) {
+  if (window.__isDraggingRail) return;
   const product = (masterProducts.length > 0 ? masterProducts.find(p => p.id === productId) : null) || allProducts.find(p => p.id === productId);
   if (!product) return;
 
@@ -405,16 +630,17 @@ function openProductModal(productId) {
   }
 
   document.getElementById('modal-category').innerText = product.category === 'men' ? "CULT.SPORT MEN" : "CULT.SPORT KIDS";
-  document.getElementById('modal-qty').innerText = modalQty;
+  const qtyEl = document.getElementById('modal-qty');
+  if (qtyEl) qtyEl.innerText = modalQty;
 
   // Sizes
   const sizeContainer = document.getElementById('modal-sizes-container');
   const sizeLabel = document.getElementById('selected-size-label');
-  sizeLabel.innerText = modalSelectedSize;
+  if (sizeLabel) sizeLabel.innerText = modalSelectedSize;
 
   if (product.sizes && product.sizes.length > 0) {
     sizeContainer.innerHTML = product.sizes.map(s => `
-      <button onclick="selectModalSize('${s}')" class="size-pill px-3 py-1.5 rounded-lg text-xs font-black ${s === modalSelectedSize ? 'active' : 'bg-slate-50 text-slate-800'}">
+      <button type="button" onclick="selectModalSize('${s}')" class="size-pill px-3 py-1.5 rounded-lg text-xs font-bold ${s === modalSelectedSize ? 'active' : 'bg-slate-50 text-slate-800'}">
         ${s}
       </button>
     `).join('');
@@ -429,9 +655,9 @@ function openProductModal(productId) {
 
   if (product.colors && product.colors.length > 0) {
     colorsWrapper.classList.remove('hidden');
-    colorLabel.innerText = modalSelectedColor;
+    if (colorLabel) colorLabel.innerText = modalSelectedColor || 'Standard';
     colorsContainer.innerHTML = product.colors.map(c => `
-      <button onclick="selectModalColor('${c}')" class="px-2.5 py-1 rounded-lg text-xs font-bold border transition-all ${c === modalSelectedColor ? 'border-slate-900 bg-slate-900 text-white' : 'border-slate-200 text-slate-700 hover:bg-slate-100'}">
+      <button type="button" onclick="selectModalColor('${c}')" class="px-3 py-1.5 rounded-lg text-xs font-bold border transition-all ${c === modalSelectedColor ? 'border-slate-900 bg-slate-900 text-white' : 'border-slate-200 text-slate-700 hover:bg-slate-100'}">
         ${c}
       </button>
     `).join('');
@@ -444,13 +670,15 @@ function openProductModal(productId) {
 }
 
 function closeProductModal() {
-  document.getElementById('product-modal').classList.add('hidden');
+  const modal = document.getElementById('product-modal');
+  if (modal) modal.classList.add('hidden');
   modalProduct = null;
 }
 
 function selectModalSize(size) {
   modalSelectedSize = size;
-  document.getElementById('selected-size-label').innerText = size;
+  const sizeLabel = document.getElementById('selected-size-label');
+  if (sizeLabel) sizeLabel.innerText = size;
   document.querySelectorAll('#modal-sizes-container .size-pill').forEach(btn => {
     if (btn.innerText.trim() === size) btn.classList.add('active');
     else btn.classList.remove('active');
@@ -459,27 +687,35 @@ function selectModalSize(size) {
 
 function selectModalColor(color) {
   modalSelectedColor = color;
-  document.getElementById('selected-color-label').innerText = color;
+  const colorLabel = document.getElementById('selected-color-label');
+  if (colorLabel) colorLabel.innerText = color;
   document.querySelectorAll('#modal-colors-container button').forEach(btn => {
     if (btn.innerText.trim() === color) {
-      btn.className = 'px-2.5 py-1 rounded-lg text-xs font-bold border border-slate-900 bg-slate-900 text-white';
+      btn.className = 'px-3 py-1.5 rounded-lg text-xs font-bold border border-slate-900 bg-slate-900 text-white';
     } else {
-      btn.className = 'px-2.5 py-1 rounded-lg text-xs font-bold border border-slate-200 text-slate-700 hover:bg-slate-100';
+      btn.className = 'px-3 py-1.5 rounded-lg text-xs font-bold border border-slate-200 text-slate-700 hover:bg-slate-100';
     }
   });
 }
 
 function incrementModalQty() {
   modalQty++;
-  document.getElementById('modal-qty').innerText = modalQty;
+  const qtyEl = document.getElementById('modal-qty');
+  if (qtyEl) qtyEl.innerText = modalQty;
 }
 
 function decrementModalQty() {
   if (modalQty > 1) {
     modalQty--;
-    document.getElementById('modal-qty').innerText = modalQty;
+    const qtyEl = document.getElementById('modal-qty');
+    if (qtyEl) qtyEl.innerText = modalQty;
   }
 }
+
+window.selectModalSize = selectModalSize;
+window.selectModalColor = selectModalColor;
+window.incrementModalQty = incrementModalQty;
+window.decrementModalQty = decrementModalQty;
 
 // 6. Cart Operations
 function quickAddToCart(productId) {
@@ -616,16 +852,16 @@ function updateCartUI() {
             <h4 class="text-xs font-black text-slate-900 truncate">${item.title}</h4>
             <span class="text-[10px] text-slate-500">Size: <strong class="text-slate-800">${item.size}</strong></span>
             <div class="flex items-center justify-between mt-1">
-              <div class="flex items-center border border-slate-300 rounded overflow-hidden bg-white">
-                <button onclick="updateCartQty(${idx}, -1)" class="px-2 py-0.5 text-xs font-bold">-</button>
-                <span class="px-2.5 py-0.5 text-xs font-black">${item.quantity}</span>
-                <button onclick="updateCartQty(${idx}, 1)" class="px-2 py-0.5 text-xs font-bold">+</button>
+              <div class="flex items-center border border-slate-300 rounded-lg overflow-hidden bg-white">
+                <button type="button" onclick="updateCartQty(${idx}, -1)" class="w-7 h-7 flex items-center justify-center text-xs font-bold hover:bg-slate-100 active:bg-slate-200">-</button>
+                <span class="px-2 py-0.5 text-xs font-black min-w-[20px] text-center">${item.quantity}</span>
+                <button type="button" onclick="updateCartQty(${idx}, 1)" class="w-7 h-7 flex items-center justify-center text-xs font-bold hover:bg-slate-100 active:bg-slate-200">+</button>
               </div>
               <span class="text-xs font-black text-slate-950">${curr}${item.price * item.quantity}</span>
             </div>
           </div>
-          <button onclick="removeFromCart(${idx})" class="text-slate-400 hover:text-rose-500 p-1">
-            <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+          <button type="button" onclick="removeFromCart(${idx})" class="w-8 h-8 rounded-lg flex items-center justify-center text-slate-400 hover:text-rose-500 hover:bg-rose-50 active:scale-95 transition-all" aria-label="Remove item">
+            <i data-lucide="trash-2" class="w-4 h-4"></i>
           </button>
         </div>
       `).join('');
@@ -797,9 +1033,11 @@ function filterByGroup(group) {
   // Update Department Tabs
   document.querySelectorAll('.cult-tab').forEach(tab => {
     if (tab.dataset.tab === group) {
-      tab.className = 'cult-tab px-3 py-1 rounded transition-all active bg-white text-black shadow-xs';
+      tab.classList.add('active', 'bg-white', 'text-black', 'shadow-xs');
+      tab.classList.remove('text-slate-500');
     } else {
-      tab.className = 'cult-tab px-3 py-1 rounded transition-all text-slate-500 hover:text-black';
+      tab.classList.remove('active', 'bg-white', 'text-black', 'shadow-xs');
+      tab.classList.add('text-slate-500');
     }
   });
 
@@ -855,10 +1093,32 @@ function filterSpecial(type) {
 }
 
 function handleFilterChange() {
-  currentFilters.size = document.getElementById('size-filter').value;
-  currentFilters.sort = document.getElementById('sort-filter').value;
+  const sizeSelect = document.getElementById('size-filter');
+  const sortSelect = document.getElementById('sort-filter');
+  if (sizeSelect) currentFilters.size = sizeSelect.value;
+  if (sortSelect) currentFilters.sort = sortSelect.value;
+
+  const mSize = document.getElementById('size-filter-mobile');
+  const mSort = document.getElementById('sort-filter-mobile');
+  if (mSize && sizeSelect) mSize.value = sizeSelect.value;
+  if (mSort && sortSelect) mSort.value = sortSelect.value;
+
   loadProducts();
 }
+
+function syncAndFilter(type, val) {
+  if (type === 'size') {
+    currentFilters.size = val;
+    const desktopSize = document.getElementById('size-filter');
+    if (desktopSize) desktopSize.value = val;
+  } else if (type === 'sort') {
+    currentFilters.sort = val;
+    const desktopSort = document.getElementById('sort-filter');
+    if (desktopSort) desktopSort.value = val;
+  }
+  loadProducts();
+}
+window.syncAndFilter = syncAndFilter;
 
 function resetFilters() {
   currentFilters = {
@@ -870,8 +1130,15 @@ function resetFilters() {
     featured: '',
     bestseller: ''
   };
-  document.getElementById('size-filter').value = '';
-  document.getElementById('sort-filter').value = 'newest';
+  const sizeSelect = document.getElementById('size-filter');
+  const sortSelect = document.getElementById('sort-filter');
+  const mSize = document.getElementById('size-filter-mobile');
+  const mSort = document.getElementById('sort-filter-mobile');
+  if (sizeSelect) sizeSelect.value = '';
+  if (sortSelect) sortSelect.value = 'newest';
+  if (mSize) mSize.value = '';
+  if (mSort) mSort.value = 'newest';
+
   const sInput = document.getElementById('search-input');
   if (sInput) sInput.value = '';
 
@@ -927,3 +1194,32 @@ function showToast(message) {
   container.appendChild(t);
   setTimeout(() => t.remove(), 2500);
 }
+
+// Global window exposure for all inline handlers
+window.filterByGroup = filterByGroup;
+window.filterBySubcategory = filterBySubcategory;
+window.filterSpecial = filterSpecial;
+window.handleFilterChange = handleFilterChange;
+window.syncAndFilter = syncAndFilter;
+window.resetFilters = resetFilters;
+window.openProductModal = openProductModal;
+window.closeProductModal = closeProductModal;
+window.quickAddToCart = quickAddToCart;
+window.addCurrentProductToCart = addCurrentProductToCart;
+window.instantWhatsAppBuy = instantWhatsAppBuy;
+window.openCartDrawer = openCartDrawer;
+window.closeCartDrawer = closeCartDrawer;
+window.openCheckoutModal = openCheckoutModal;
+window.closeCheckoutModal = closeCheckoutModal;
+window.handleCheckoutSubmit = handleCheckoutSubmit;
+window.closeSuccessModal = closeSuccessModal;
+window.openTrackModal = openTrackModal;
+window.closeTrackModal = closeTrackModal;
+window.handleTrackOrder = handleTrackOrder;
+window.scrollToProducts = scrollToProducts;
+window.updateCartQty = updateCartQty;
+window.removeFromCart = removeFromCart;
+window.selectModalSize = selectModalSize;
+window.selectModalColor = selectModalColor;
+window.incrementModalQty = incrementModalQty;
+window.decrementModalQty = decrementModalQty;
